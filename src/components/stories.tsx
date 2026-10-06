@@ -48,6 +48,7 @@ export function Stories() {
           index={open}
           onClose={() => setOpen(null)}
           onNext={() => setOpen((i) => (i === null ? i : i + 1 >= stories.length ? null : i + 1))}
+          onPrev={() => setOpen((i) => (i === null ? i : i - 1 < 0 ? i : i - 1))}
         />
       ) : null}
     </>
@@ -58,10 +59,12 @@ function StoryViewer({
   index,
   onClose,
   onNext,
+  onPrev,
 }: {
   index: number;
   onClose: () => void;
   onNext: () => void;
+  onPrev: () => void;
 }) {
   const stories = STORY_IDS.map((id) => RESTAURANTS.find((r) => r.id === id)).filter(
     (r): r is Restaurant => Boolean(r),
@@ -76,7 +79,7 @@ function StoryViewer({
   if (!r) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] mx-auto flex max-w-phone flex-col bg-ink text-ink-fg">
+    <div className="fixed inset-y-0 left-1/2 z-[70] flex w-full max-w-phone -translate-x-1/2 flex-col bg-ink text-ink-fg">
       <div className="flex gap-1 px-3 pt-[max(0.8rem,env(safe-area-inset-top))]">
         {stories.map((_, i) => (
           <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-ink-fg/20">
@@ -105,7 +108,7 @@ function StoryViewer({
             Pedir agora
           </Link>
         </div>
-        <button type="button" className="absolute inset-y-0 left-0 w-1/3" aria-label="Anterior" onClick={onClose} />
+        <button type="button" className="absolute inset-y-0 left-0 w-1/3" aria-label="Anterior" onClick={onPrev} />
         <button type="button" className="absolute inset-y-0 right-0 w-1/3" aria-label="Próxima" onClick={onNext} />
       </div>
     </div>

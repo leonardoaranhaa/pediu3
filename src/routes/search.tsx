@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search as SearchIcon, SlidersHorizontal, Sparkles, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RestaurantRow } from "@/components/restaurant-card";
 import { Screen } from "@/components/shell";
-import { CATEGORIES, flashRestaurants, getRestaurant, searchAll } from "@/lib/data";
+import { CATEGORIES, flashRestaurants, getRestaurant, isOpenNow, searchAll, type Restaurant } from "@/lib/data";
 import { formatBRL } from "@/lib/format";
 import { usePediu } from "@/lib/store";
 
@@ -14,17 +14,40 @@ export const Route = createFileRoute("/search")({
   component: SearchPage,
 });
 
+type SortId = "best" | "time" | "fee" | "rating";
+
+function sortRestaurants(list: Restaurant[], sort: SortId) {
+  const copy = [...list];
+  if (sort === "time") copy.sort((a, b) => a.deliveryMax - b.deliveryMax);
+  else if (sort === "fee") copy.sort((a, b) => a.deliveryFee - b.deliveryFee);
+  else if (sort === "rating") copy.sort((a, b) => b.rating - a.rating);
+  return copy;
+}
+
 function SearchPage() {
   const { q: qParam } = Route.useSearch();
   const [q, setQ] = useState(qParam ?? "");
+  const [sort, setSort] = useState<SortId>("best");
+  const [chip, setChip] = useState<"all" | "flash" | "free" | "open">("all");
   const addSearch = usePediu((s) => s.addSearch);
   const recent = usePediu((s) => s.recentSearches);
   const flashHint = q.trim().toLowerCase() === "flash";
   const results = useMemo(() => {
-    if (flashHint) return { restaurants: flashRestaurants(), dishes: [] };
+    if (flashHint) return { restaurants: flashRestaurants(), dishes: [] as ReturnType<typeof searchAll>["dishes"] };
     return searchAll(q);
   }, [q, flashHint]);
+  const restaurants = useMemo(() => {
+    let list = results.restaurants;
+    if (chip === "flash") list = list.filter((r) => r.flash);
+    if (chip === "free") list = list.filter((r) => r.deliveryFee === 0);
+    if (chip === "open") list = list.filter((r) => isOpenNow(r.flash));
+    return sortRestaurants(list, sort);
+  }, [results.restaurants, sort, chip]);
   const hasQuery = q.trim().length > 0;
+
+  useEffect(() => {
+    setQ(qParam ?? "");
+  }, [qParam]);
 
   return (
     <Screen>
@@ -85,7 +108,7 @@ function SearchPage() {
                     key={c.id}
                     type="button"
                     onClick={() => setQ(c.cuisine ?? c.label)}
-                    className="overflow-hidden rounded-[20px] bg-surface text-left shadow-card"
+                    className="overflow-hidden rounded-[20px] bg-surface text-left shadow-card transition-transform duration-150 ease-out active:scale-[0.97]"
                   >
                     <img src={c.image} alt="" className="h-16 w-full object-cover" />
                     <p className="px-2 py-2 text-xs font-semibold">{c.label}</p>
@@ -101,11 +124,57 @@ function SearchPage() {
                 Flash 99 — entrega em até 22 minutos.
               </p>
             ) : null}
-            {results.restaurants.length > 0 ? (
+            {restaurants.length > 0 ? (
               <section>
-                <h2 className="font-display text-base font-bold">Restaurantes</h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="font-display text-base font-bold">Restaurantes</h2>
+                </div>
+                <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto">
+                  {(
+                    [
+                      ["all", "Tudo"],
+                      ["open", "Aberto"],
+                      ["flash", "Flash"],
+                      ["free", "Grátis"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setChip(id)}
+                      className={
+                        chip === id
+                          ? "h-8 shrink-0 rounded-full bg-primary px-3 text-[11px] font-semibold text-primary-fg"
+                          : "h-8 shrink-0 rounded-full bg-surface px-3 text-[11px] font-semibold text-muted shadow-card"
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  {(
+                    [
+                      ["best", "Relevância"],
+                      ["time", "Mais rápido"],
+                      ["fee", "Menor taxa"],
+                      ["rating", "Nota"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSort(id)}
+                      className={
+                        sort === id
+                          ? "h-8 shrink-0 rounded-full bg-ink px-3 text-[11px] font-semibold text-ink-fg"
+                          : "h-8 shrink-0 rounded-full bg-surface px-3 text-[11px] font-semibold text-muted shadow-card"
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <div className="mt-2 grid gap-2">
-                  {results.restaurants.map((r) => (
+                  {restaurants.map((r) => (
                     <RestaurantRow key={r.id} restaurant={r} />
                   ))}
                 </div>
@@ -136,7 +205,7 @@ function SearchPage() {
                 </div>
               </section>
             ) : null}
-            {results.restaurants.length === 0 && results.dishes.length === 0 ? (
+            {restaurants.length === 0 && results.dishes.length === 0 ? (
               <div className="rounded-[24px] bg-surface px-5 py-10 text-center shadow-card">
                 <p className="font-display text-lg font-bold">Nada com esse nome</p>
                 <p className="mt-1 text-sm text-muted">Tenta pizza, açaí, ramen ou mercado.</p>

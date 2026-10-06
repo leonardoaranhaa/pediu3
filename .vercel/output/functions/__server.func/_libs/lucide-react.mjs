@@ -108,6 +108,19 @@ var Banknote = createLucideIcon("banknote", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Bell = createLucideIcon("bell", [["path", {
+	d: "M10.268 21a2 2 0 0 0 3.464 0",
+	key: "vwvbt9"
+}], ["path", {
+	d: "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",
+	key: "11g9vi"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Bike = createLucideIcon("bike", [
 	["circle", {
 		cx: "18.5",
@@ -141,6 +154,16 @@ var Bike = createLucideIcon("bike", [
 var Check = createLucideIcon("check", [["path", {
 	d: "M20 6 9 17l-5-5",
 	key: "1gmf2c"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ChevronDown = createLucideIcon("chevron-down", [["path", {
+	d: "m6 9 6 6 6-6",
+	key: "qrunsl"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -491,20 +514,13 @@ var Search = createLucideIcon("search", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var ShoppingBag = createLucideIcon("shopping-bag", [
-	["path", {
-		d: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z",
-		key: "hou9p0"
-	}],
-	["path", {
-		d: "M3 6h18",
-		key: "d0wm0j"
-	}],
-	["path", {
-		d: "M16 10a4 4 0 0 1-8 0",
-		key: "1ltviw"
-	}]
-]);
+var Send = createLucideIcon("send", [["path", {
+	d: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z",
+	key: "1ffxy3"
+}], ["path", {
+	d: "m21.854 2.147-10.94 10.939",
+	key: "12cjpa"
+}]]);
 /**
 * @license lucide-react v0.510.0 - ISC
 *
@@ -708,6 +724,34 @@ var Ticket = createLucideIcon("ticket", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Timer = createLucideIcon("timer", [
+	["line", {
+		x1: "10",
+		x2: "14",
+		y1: "2",
+		y2: "2",
+		key: "14vaq8"
+	}],
+	["line", {
+		x1: "12",
+		x2: "15",
+		y1: "14",
+		y2: "11",
+		key: "17fdiu"
+	}],
+	["circle", {
+		cx: "12",
+		cy: "14",
+		r: "8",
+		key: "1e1u0o"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Trash2 = createLucideIcon("trash-2", [
 	["path", {
 		d: "M3 6h18",
@@ -792,6 +836,56 @@ var User = createLucideIcon("user", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Users = createLucideIcon("users", [
+	["path", {
+		d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
+		key: "1yyitq"
+	}],
+	["path", {
+		d: "M16 3.128a4 4 0 0 1 0 7.744",
+		key: "16gr8j"
+	}],
+	["path", {
+		d: "M22 21v-2a4 4 0 0 0-3-3.87",
+		key: "kshegd"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "7",
+		r: "4",
+		key: "nufk8"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var WalletCards = createLucideIcon("wallet-cards", [
+	["rect", {
+		width: "18",
+		height: "18",
+		x: "3",
+		y: "3",
+		rx: "2",
+		key: "afitv7"
+	}],
+	["path", {
+		d: "M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2",
+		key: "4125el"
+	}],
+	["path", {
+		d: "M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21",
+		key: "1dpki6"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var X = createLucideIcon("x", [["path", {
 	d: "M18 6 6 18",
 	key: "1bl5f8"
@@ -810,4 +904,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { ChevronRight as A, House as C, Clock as D, Copy as E, Check as M, Bike as N, ClipboardList as O, Banknote as P, MapPin as S, CreditCard as T, QrCode as _, TriangleAlert as a, Minus as b, Store as c, SlidersHorizontal as d, ShoppingBasket as f, RotateCcw as g, ScanSearch as h, UserRound as i, ChevronLeft as j, CircleHelp as k, Star as l, Search as m, X as n, Trash2 as o, ShoppingBag as p, User as r, Ticket as s, Zap as t, Sparkles as u, Plus as v, Heart as w, MessageCircle as x, Phone as y };
+export { Clock as A, Minus as C, Heart as D, House as E, ChevronDown as F, Check as I, Bike as L, CircleHelp as M, ChevronRight as N, CreditCard as O, ChevronLeft as P, Bell as R, Phone as S, MapPin as T, Search as _, User as a, QrCode as b, Trash2 as c, Store as d, Star as f, Send as g, ShoppingBasket as h, Users as i, ClipboardList as j, Copy as k, Timer as l, SlidersHorizontal as m, X as n, UserRound as o, Sparkles as p, WalletCards as r, TriangleAlert as s, Zap as t, Ticket as u, ScanSearch as v, MessageCircle as w, Plus as x, RotateCcw as y, Banknote as z };

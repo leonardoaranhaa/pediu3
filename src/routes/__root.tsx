@@ -16,7 +16,8 @@ function RootChrome() {
 
   useEffect(() => {
     let alive = true;
-    void usePediu.persist.rehydrate().then(() => {
+    const result = usePediu.persist.rehydrate();
+    void Promise.resolve(result).then(() => {
       if (alive) setHydrated(true);
     });
     return () => {

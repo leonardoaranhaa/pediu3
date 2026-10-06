@@ -10,6 +10,15 @@ export function formatRange(min: number, max: number) {
   return `${min}–${max} min`;
 }
 
+export function formatRemain(mins: number) {
+  if (mins <= 0) return "agora";
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (rest === 0) return `${hours} h`;
+  return `${hours} h ${rest} min`;
+}
+
 export function greetingForHour(hour: number) {
   if (hour < 5) return "Boa madrugada";
   if (hour < 12) return "Bom dia";

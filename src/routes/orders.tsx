@@ -1,36 +1,23 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, RotateCcw } from "lucide-react";
 import { Screen } from "@/components/shell";
 import { Button } from "@/components/ui/button";
+import { deliveryClock, useNow } from "@/lib/clock";
 import { formatBRL } from "@/lib/format";
-import { usePediu, type Order, type OrderStatus } from "@/lib/store";
+import { STATUS_LABEL, usePediu, type Order } from "@/lib/store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({ component: OrdersPage });
-
-const LABELS: Record<OrderStatus, string> = {
-  received: "Recebido",
-  preparing: "Preparando",
-  on_the_way: "A caminho",
-  arriving: "Chegando",
-  delivered: "Entregue",
-};
-
-function liveStatus(order: Order): OrderStatus {
-  const elapsed = Date.now() - order.createdAt;
-  if (elapsed > 36_000) return "delivered";
-  if (elapsed > 28_000) return "arriving";
-  if (elapsed > 12_000) return "on_the_way";
-  if (elapsed > 4_000) return "preparing";
-  return "received";
-}
 
 function OrdersPage() {
   const orders = usePediu((s) => s.orders);
   const addToCart = usePediu((s) => s.addToCart);
   const clearCart = usePediu((s) => s.clearCart);
+  const navigate = useNavigate();
+  const now = useNow();
 
-  const active = orders.filter((o) => liveStatus(o) !== "delivered");
-  const past = orders.filter((o) => liveStatus(o) === "delivered");
+  const active = orders.filter((o) => deliveryClock(o, now).status !== "delivered");
+  const past = orders.filter((o) => deliveryClock(o, now).status === "delivered");
 
   return (
     <Screen>
@@ -51,7 +38,7 @@ function OrdersPage() {
                 <p className="text-xs font-bold uppercase tracking-wider text-primary">Ao vivo</p>
                 <div className="mt-2 grid gap-2">
                   {active.map((o) => (
-                    <OrderCard key={o.id} order={o} live />
+                    <OrderCard key={o.id} order={o} live now={now} />
                   ))}
                 </div>
               </section>
@@ -62,7 +49,7 @@ function OrdersPage() {
                 <div className="mt-2 grid gap-2">
                   {past.map((o) => (
                     <div key={o.id} className="rounded-[22px] bg-surface p-3 shadow-card">
-                      <OrderCard order={o} live={false} />
+                      <OrderCard order={o} live={false} nested now={now} />
                       <Button
                         variant="surface"
                         size="sm"
@@ -77,6 +64,8 @@ function OrdersPage() {
                               notes: item.notes,
                             });
                           });
+                          toast.success("Montamos de novo");
+                          void navigate({ to: "/cart" });
                         }}
                       >
                         <RotateCcw className="size-4" />
@@ -94,23 +83,40 @@ function OrdersPage() {
   );
 }
 
-function OrderCard({ order, live }: { order: Order; live: boolean }) {
-  const status = liveStatus(order);
+function OrderCard({
+  order,
+  live,
+  nested,
+  now,
+}: {
+  order: Order;
+  live: boolean;
+  nested?: boolean;
+  now: number;
+}) {
+  const status = deliveryClock(order, now).status;
   return (
     <Link
       to="/order/$id"
       params={{ id: order.id }}
-      className="flex items-center gap-3 rounded-[22px] bg-surface p-3 shadow-card"
+      className={nested ? "flex items-center gap-3" : "flex items-center gap-3 rounded-[22px] bg-surface p-3 shadow-card"}
     >
       <img src={order.restaurantImage} alt="" className="size-14 rounded-[16px] object-cover" />
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-sm font-semibold">{order.restaurantName}</p>
         <p className="text-xs text-muted">
-          {LABELS[status]} · {formatBRL(order.total)}
+          {STATUS_LABEL[status]} · {formatBRL(order.total)}
         </p>
         <p className="text-[11px] text-subtle tabular-nums">{order.id}</p>
       </div>
-      {live ? <span className="size-2 rounded-full bg-primary" /> : <ChevronRight className="size-4 text-subtle" />}
+      {live ? (
+        <span className="relative grid size-4 place-items-center">
+          <span className="absolute size-4 rounded-full bg-primary/40 pulse-live" />
+          <span className="size-2 rounded-full bg-primary" />
+        </span>
+      ) : (
+        <ChevronRight className="size-4 text-subtle" />
+      )}
     </Link>
   );
 }

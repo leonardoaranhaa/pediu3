@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ClubRouteImport } from './routes/club'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as TasteRouteImport } from './routes/taste'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 
@@ -33,6 +36,16 @@ const CartRoute = CartRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubRoute = ClubRouteImport.update({
+  id: '/club',
+  path: '/club',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketRoute = MarketRouteImport.update({
@@ -60,6 +73,11 @@ const TasteRoute = TasteRouteImport.update({
   path: '/taste',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrderIdRoute = OrderIdRouteImport.update({
   id: '/order/$id',
   path: '/order/$id',
@@ -75,11 +93,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/club': typeof ClubRoute
+  '/help': typeof HelpRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/wallet': typeof WalletRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
 }
@@ -87,11 +108,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/club': typeof ClubRoute
+  '/help': typeof HelpRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/wallet': typeof WalletRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
 }
@@ -100,11 +124,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/club': typeof ClubRoute
+  '/help': typeof HelpRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/wallet': typeof WalletRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
 }
@@ -114,11 +141,14 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/checkout'
+    | '/club'
+    | '/help'
     | '/market'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
+    | '/wallet'
     | '/order/$id'
     | '/restaurants/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -126,11 +156,14 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/checkout'
+    | '/club'
+    | '/help'
     | '/market'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
+    | '/wallet'
     | '/order/$id'
     | '/restaurants/$id'
   id:
@@ -138,11 +171,14 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/checkout'
+    | '/club'
+    | '/help'
     | '/market'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
+    | '/wallet'
     | '/order/$id'
     | '/restaurants/$id'
   fileRoutesById: FileRoutesById
@@ -151,11 +187,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  ClubRoute: typeof ClubRoute
+  HelpRoute: typeof HelpRoute
   MarketRoute: typeof MarketRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   TasteRoute: typeof TasteRoute
+  WalletRoute: typeof WalletRoute
   OrderIdRoute: typeof OrderIdRoute
   RestaurantsIdRoute: typeof RestaurantsIdRoute
 }
@@ -181,6 +220,20 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/club': {
+      id: '/club'
+      path: '/club'
+      fullPath: '/club'
+      preLoaderRoute: typeof ClubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/market': {
@@ -218,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/order/$id': {
       id: '/order/$id'
       path: '/order/$id'
@@ -239,11 +299,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  ClubRoute: ClubRoute,
+  HelpRoute: HelpRoute,
   MarketRoute: MarketRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   TasteRoute: TasteRoute,
+  WalletRoute: WalletRoute,
   OrderIdRoute: OrderIdRoute,
   RestaurantsIdRoute: RestaurantsIdRoute,
 }

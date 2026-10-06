@@ -5,7 +5,7 @@ import { Drawer } from "vaul";
 import { DishSheet } from "@/components/dish-sheet";
 import { Screen } from "@/components/shell";
 import { Button } from "@/components/ui/button";
-import { dishesOf, getRestaurant, reviewsFor, type Dish, type Extra } from "@/lib/data";
+import { dishesOf, getRestaurant, hoursFor, isOpenNow, reviewsFor, shownFee, shownRating, type Dish, type Extra } from "@/lib/data";
 import { formatBRL, formatFee, formatRange } from "@/lib/format";
 import { usePediu } from "@/lib/store";
 import { toast } from "sonner";
@@ -22,6 +22,8 @@ function RestaurantPage() {
   const fav = usePediu((s) => s.favorites.includes(id));
   const toggleFav = usePediu((s) => s.toggleFavorite);
   const replaceCartWith = usePediu((s) => s.replaceCartWith);
+  const userRating = usePediu((s) => s.ratings?.[id]);
+  const points = usePediu((s) => s.points);
   const [activeCat, setActiveCat] = useState("Tudo");
   const [selected, setSelected] = useState<Dish | null>(null);
   const [conflict, setConflict] = useState<{
@@ -37,6 +39,8 @@ function RestaurantPage() {
   }, [dishes]);
 
   const visible = activeCat === "Tudo" ? dishes : dishes.filter((d) => d.category === activeCat);
+  const shown = restaurant ? shownRating(restaurant.rating, restaurant.reviewCount, userRating) : null;
+  const fee = restaurant ? shownFee(restaurant.deliveryFee, restaurant.flash, points) : 0;
 
   if (!restaurant) {
     return (
@@ -96,21 +100,28 @@ function RestaurantPage() {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
             <span className="inline-flex items-center gap-1 font-display font-semibold">
               <Star className="size-4 fill-accent text-accent" />
-              {restaurant.rating.toFixed(1)}
+              {shown?.score.toFixed(1)}
               <span className="font-sans font-medium text-muted">
-                ({restaurant.reviewCount.toLocaleString("pt-BR")})
+                ({shown?.count.toLocaleString("pt-BR")})
               </span>
             </span>
             <span className="inline-flex items-center gap-1 text-muted">
               <Clock className="size-4" />
               {formatRange(restaurant.deliveryMin, restaurant.deliveryMax)}
             </span>
-            <span className={restaurant.deliveryFee === 0 ? "font-semibold text-success" : "text-muted"}>
-              {formatFee(restaurant.deliveryFee)}
+            <span className={fee === 0 ? "font-semibold text-success" : "text-muted"}>
+              {formatFee(fee)}
             </span>
+            <span className="text-muted">{hoursFor(restaurant.flash)}</span>
           </div>
 
           <p className="mt-3 text-sm leading-relaxed text-muted">{restaurant.about}</p>
+
+          {!isOpenNow(restaurant.flash) ? (
+            <p className="mt-3 rounded-[16px] bg-accent px-3 py-2 text-xs font-semibold text-accent-fg">
+              Cozinha abre às 10:00. Pode pedir agora — a gente agenda.
+            </p>
+          ) : null}
 
           <div className="mt-4 grid gap-2">
             {reviewsFor(restaurant.id).map((rev) => (

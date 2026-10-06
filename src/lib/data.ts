@@ -517,12 +517,103 @@ export const DISHES: Dish[] = [
 ];
 
 export const COURIERS = [
-  { name: "Camila Souza", vehicle: "Moto Flash" },
-  { name: "Rafael Lima", vehicle: "Moto 99" },
-  { name: "Thiago Alves", vehicle: "Bike Flash" },
-  { name: "Jéssica Rocha", vehicle: "Moto Flash" },
-  { name: "Bruno Nunes", vehicle: "Moto 99" },
+  { name: "Camila Souza", vehicle: "Moto Flash", plate: "RFL-0A99", rating: 4.97, trips: 1840, hue: 12 },
+  { name: "Rafael Lima", vehicle: "Moto 99", plate: "QWE-9B12", rating: 4.92, trips: 2210, hue: 32 },
+  { name: "Thiago Alves", vehicle: "Bike Flash", plate: "BIKE-04", rating: 4.99, trips: 640, hue: 200 },
+  { name: "Jéssica Rocha", vehicle: "Moto Flash", plate: "JSC-4412", rating: 4.95, trips: 1102, hue: 340 },
+  { name: "Bruno Nunes", vehicle: "Moto 99", plate: "BRN-7781", rating: 4.9, trips: 980, hue: 160 },
 ];
+
+export type Promo = {
+  id: string;
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  to: "/" | "/search" | "/market" | "/taste" | "/club";
+  q?: string;
+  tone: "primary" | "accent" | "ink";
+};
+
+export const PROMOS: Promo[] = [
+  {
+    id: "flash",
+    kicker: "Flash 99",
+    title: "Chega em 15 min",
+    subtitle: "Motos livres agora na Consolação",
+    image: "/food/burger.jpg",
+    to: "/search",
+    q: "flash",
+    tone: "accent",
+  },
+  {
+    id: "cupom",
+    kicker: "PEDIU10",
+    title: "10% na primeira sacola",
+    subtitle: "Válido acima de R$ 40",
+    image: "/food/pizza.jpg",
+    to: "/search",
+    tone: "primary",
+  },
+  {
+    id: "mercado",
+    kicker: "Mercado",
+    title: "Relâmpago 25 min",
+    subtitle: "Leite, pão e banana agora",
+    image: "/food/feijoada.jpg",
+    to: "/market",
+    tone: "ink",
+  },
+  {
+    id: "sabor",
+    kicker: "Sabor",
+    title: "O que pedir agora?",
+    subtitle: "A fome escolhe o cardápio",
+    image: "/food/acai.jpg",
+    to: "/taste",
+    tone: "primary",
+  },
+];
+
+export const JUNTO = [
+  { id: "mari", name: "Mari", initial: "M" },
+  { id: "joao", name: "João", initial: "J" },
+];
+
+export const CANNED_REPLIES = [
+  "Pode deixar na portaria",
+  "Já estou descendo",
+  "Tô no portão",
+];
+
+export const TIP_OPTIONS = [0, 2, 5, 8] as const;
+
+export function hoursFor(flash: boolean) {
+  return flash ? "Aberto 24h · Flash" : "10:00 – 23:30";
+}
+
+export function isOpenNow(flash: boolean, at: Date = new Date()) {
+  if (flash) return true;
+  const mins = at.getHours() * 60 + at.getMinutes();
+  return mins >= 10 * 60 && mins <= 23 * 60 + 30;
+}
+
+export function clubTier(points: number) {
+  if (points >= 800) return { id: "flash" as const, name: "Flash 99", next: null as number | null, perk: "Entrega grátis nos Flash" };
+  if (points >= 250) return { id: "prata" as const, name: "Prata", next: 800, perk: "1,2× pontos em todo pedido" };
+  return { id: "inicio" as const, name: "Pediu", next: 250, perk: "Cupom de boas-vindas" };
+}
+
+export function shownRating(base: number, reviewCount: number, userRating?: number) {
+  if (!userRating) return { score: base, count: reviewCount };
+  const score = Math.round(((base * reviewCount + userRating) / (reviewCount + 1)) * 10) / 10;
+  return { score, count: reviewCount + 1 };
+}
+
+export function shownFee(fee: number, flash: boolean, points: number) {
+  if (flash && clubTier(points).id === "flash") return 0;
+  return fee;
+}
 
 export type TasteMood = {
   id: string;
@@ -539,6 +630,86 @@ export const TASTE_MOODS: TasteMood[] = [
   { id: "festa", title: "Pra galera", subtitle: "Pizza, kit, combo.", tags: ["pizza", "coxinha", "combo"], cuisines: ["Pizza", "Salgados", "Lanches"] },
   { id: "madruga", title: "Madrugada", subtitle: "Flash, smash, coxinha.", tags: ["smash", "coxinha", "pizza"], cuisines: ["Lanches", "Salgados", "Pizza"] },
   { id: "doce", title: "Só um doce", subtitle: "Brigadeiro resolve.", tags: ["brigadeiro", "bolo", "açaí"], cuisines: ["Doces", "Saudável", "Padaria"] },
+];
+
+export const FLASH_DEALS = [
+  { restaurantId: "smash-club", off: 20, dish: "Double smash" },
+  { restaurantId: "acai-do-parque", off: 15, dish: "Tigela 500 ml" },
+  { restaurantId: "coxinha-da-esquina", off: 12, dish: "Kit 6 coxinhas" },
+  { restaurantId: "padaria-lume", off: 10, dish: "Combo manhã" },
+] as const;
+
+export const REFERRAL_CODE = "PEDIUVCE";
+
+export const HELP_TOPICS = [
+  {
+    id: "pedido",
+    title: "Pedido",
+    items: [
+      {
+        q: "Posso cancelar?",
+        a: "Até a cozinha confirmar, cancela em Pedidos. Depois disso, fala com a moto no chat — ela devolve se ainda não saiu.",
+      },
+      {
+        q: "Atraso Flash 99",
+        a: "Se passar de 22 min no Flash, a taxa some na hora e cai um cupom de R$ 5 na carteira.",
+      },
+      {
+        q: "Pedir de novo",
+        a: "Em Pedidos anteriores, toque em Pedir de novo. A sacola volta com os extras e observações.",
+      },
+    ],
+  },
+  {
+    id: "entrega",
+    title: "Entrega e moto",
+    items: [
+      {
+        q: "Onde está a moto?",
+        a: "Abre o pedido ao vivo. O radar da 99 desenha a rua Augusta até a sua porta, com placa e nota do entregador.",
+      },
+      {
+        q: "Chat e ligação",
+        a: "No pedido em andamento: Chat pra texto, Ligar pra urgência. A moto responde com frases prontas.",
+      },
+      {
+        q: "Gorjeta",
+        a: "No checkout, de 0 a R$ 8. 100% vai pra quem está no guidão.",
+      },
+    ],
+  },
+  {
+    id: "pay",
+    title: "Pediu Pay e cupons",
+    items: [
+      {
+        q: "O que é Pediu Pay?",
+        a: "Carteira do app. Recarrega, paga o pedido e recebe 2% de cashback em todo Pediu.",
+      },
+      {
+        q: "Cupom não aplica",
+        a: "PEDIU10 pede R$ 40. FLASH99 só em restaurante Flash. PIX5 só no Pix. FOME20 a partir de R$ 59.",
+      },
+      {
+        q: "Pontos do Clube",
+        a: "R$ 1 vira 1 ponto. Troca 100 pts por R$ 8 na carteira, na aba Clube.",
+      },
+    ],
+  },
+  {
+    id: "mercado",
+    title: "Mercado",
+    items: [
+      {
+        q: "Quanto demora?",
+        a: "Mercado Pediu sai em até 25 min, na mesma moto Flash da Consolação.",
+      },
+      {
+        q: "Pode misturar com comida?",
+        a: "A sacola é de um lugar por vez. Se misturar, a gente pergunta se troca.",
+      },
+    ],
+  },
 ];
 
 export function getRestaurant(id: string) {

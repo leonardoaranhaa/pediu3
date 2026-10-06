@@ -2,13 +2,16 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   applyCoupon,
+  clubTier,
   COURIERS,
   dishesOf,
   getAddress,
   getDish,
   getRestaurant,
+  shownFee,
   type Extra,
 } from "@/lib/data";
+import { deliveryClock, STATUS_LABEL, useNow, type DeliveryStatus } from "@/lib/clock";
 
 export type CartItem = {
   key: string;
@@ -22,9 +25,33 @@ export type CartItem = {
   notes: string;
 };
 
-export type PaymentMethod = "pix" | "card" | "cash";
+export type PaymentMethod = "pix" | "card" | "cash" | "wallet";
 
-export type OrderStatus = "received" | "preparing" | "on_the_way" | "arriving" | "delivered";
+export type OrderStatus = DeliveryStatus;
+
+export type ChatMsg = {
+  id: string;
+  from: "me" | "courier";
+  text: string;
+  at: number;
+};
+
+export type Notif = {
+  id: string;
+  title: string;
+  body: string;
+  at: number;
+  read: boolean;
+  to?: "/" | "/search" | "/market" | "/taste" | "/club" | "/orders" | "/wallet" | "/help";
+  q?: string;
+};
+
+export type WalletTx = {
+  id: string;
+  label: string;
+  amount: number;
+  at: number;
+};
 
 export type Order = {
   id: string;
@@ -35,15 +62,20 @@ export type Order = {
   subtotal: number;
   deliveryFee: number;
   discount: number;
+  tip: number;
   total: number;
+  cashback: number;
   status: OrderStatus;
   createdAt: number;
   etaMins: number;
   payment: PaymentMethod;
   addressId: string;
   coupon?: string;
-  courier: { name: string; vehicle: string };
+  courier: { name: string; vehicle: string; plate: string; rating: number; trips: number; hue: number };
   flash: boolean;
+  scheduled?: string;
+  junto?: boolean;
+  rating?: number;
 };
 
 type AddPayload = {
@@ -64,12 +96,24 @@ type PediuState = {
   orders: Order[];
   recentSearches: string[];
   seenSplash: boolean;
+  points: number;
+  tip: number;
+  schedule: string | null;
+  junto: boolean;
+  chats: Record<string, ChatMsg[]>;
+  notifications: Notif[];
+  wallet: number;
+  walletTx: WalletTx[];
+  ratings: Record<string, number>;
   setName: (name: string) => void;
   setAddress: (id: string) => void;
   setPayment: (p: PaymentMethod) => void;
   toggleCpf: () => void;
   toggleFavorite: (id: string) => void;
   setCoupon: (code: string | null) => void;
+  setTip: (n: number) => void;
+  setSchedule: (s: string | null) => void;
+  toggleJunto: () => void;
   addToCart: (payload: AddPayload) => "ok" | "conflict";
   replaceCartWith: (payload: AddPayload) => void;
   updateQty: (key: string, qty: number) => void;
@@ -78,6 +122,12 @@ type PediuState = {
   markSplashSeen: () => void;
   placeOrder: () => Order | null;
   orderById: (id: string) => Order | undefined;
+  rateOrder: (id: string, rating: number) => void;
+  sendChat: (orderId: string, text: string, from?: ChatMsg["from"]) => void;
+  seedCourierChat: (orderId: string, text: string) => void;
+  markNotifsRead: () => void;
+  topUp: (amount: number) => void;
+  redeemPoints: (cost: number, reais: number) => boolean;
 };
 
 function itemKey(dishId: string, extras: Extra[], notes: string) {
@@ -92,23 +142,35 @@ function extraSum(extras: Extra[]) {
   return extras.reduce((s, e) => s + e.price, 0);
 }
 
-export function cartTotals(cart: CartItem[], coupon: string | null, payment: PaymentMethod) {
+function roundMoney(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+export function cartTotals(cart: CartItem[], coupon: string | null, payment: PaymentMethod, points = 0) {
   const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
   const restaurantId = cart[0]?.restaurantId;
   const restaurant = restaurantId ? getRestaurant(restaurantId) : undefined;
   const baseFee = restaurant?.deliveryFee ?? 0;
   const applied = applyCoupon(coupon, subtotal, baseFee, Boolean(restaurant?.flash), payment);
-  const total = Math.max(0, subtotal + applied.deliveryFee - applied.discount);
+  const deliveryFee = shownFee(applied.deliveryFee, Boolean(restaurant?.flash), points);
+  const total = Math.max(0, roundMoney(subtotal + deliveryFee - applied.discount));
   return {
     subtotal,
-    deliveryFee: applied.deliveryFee,
+    deliveryFee,
     discount: applied.discount,
     total,
     restaurant,
     couponLabel: applied.label,
     itemCount: cart.reduce((s, i) => s + i.qty, 0),
+    clubFree: deliveryFee === 0 && applied.deliveryFee > 0 && clubTier(points).id === "flash",
   };
 }
+
+export function liveStatusFrom(order: { createdAt: number; etaMins?: number; scheduled?: string }, now = Date.now()): OrderStatus {
+  return deliveryClock(order, now).status;
+}
+
+export { deliveryClock, STATUS_LABEL, useNow };
 
 function buildItem(payload: AddPayload): CartItem | null {
   const dish = getDish(payload.dishId);
@@ -127,6 +189,40 @@ function buildItem(payload: AddPayload): CartItem | null {
   };
 }
 
+const STARTER_NOTIFS: Notif[] = [
+  {
+    id: "n-flash",
+    title: "Flash 99 na Augusta",
+    body: "Cinco motos livres a menos de 1 km. Smash e coxinha saem agora.",
+    at: Date.now() - 42 * 60_000,
+    read: false,
+    to: "/search",
+    q: "flash",
+  },
+  {
+    id: "n-cupom",
+    title: "PEDIU10 te espera",
+    body: "10% na sacola acima de R$ 40. Vale hoje.",
+    at: Date.now() - 5 * 3600_000,
+    read: false,
+    to: "/search",
+  },
+  {
+    id: "n-pay",
+    title: "R$ 15 na Pediu Pay",
+    body: "Boas-vindas na carteira. Paga o próximo Flash sem abrir o banco.",
+    at: Date.now() - 26 * 3600_000,
+    read: false,
+    to: "/wallet",
+  },
+];
+
+const STARTER_TX: WalletTx[] = [
+  { id: "w1", label: "Boas-vindas Pediu Pay", amount: 15, at: Date.now() - 26 * 3600_000 },
+  { id: "w2", label: "Pix recebido", amount: 16.7, at: Date.now() - 8 * 3600_000 },
+  { id: "w3", label: "Cashback Smash Club", amount: 1.2, at: Date.now() - 3 * 3600_000 },
+];
+
 export const usePediu = create<PediuState>()(
   persist(
     (set, get) => ({
@@ -140,6 +236,15 @@ export const usePediu = create<PediuState>()(
       orders: [],
       recentSearches: ["pizza", "açaí", "flash"],
       seenSplash: false,
+      points: 268,
+      tip: 2,
+      schedule: null,
+      junto: false,
+      chats: {},
+      notifications: STARTER_NOTIFS,
+      wallet: 32.9,
+      walletTx: STARTER_TX,
+      ratings: {},
       setName: (name) => set({ name: name.trim() || "Você" }),
       setAddress: (id) => set({ addressId: id }),
       setPayment: (p) => set({ payment: p }),
@@ -151,6 +256,9 @@ export const usePediu = create<PediuState>()(
             : [...get().favorites, id],
         }),
       setCoupon: (code) => set({ coupon: code }),
+      setTip: (n) => set({ tip: n }),
+      setSchedule: (s) => set({ schedule: s }),
+      toggleJunto: () => set({ junto: !get().junto }),
       addToCart: (payload) => {
         const next = buildItem(payload);
         if (!next) return "ok";
@@ -184,12 +292,17 @@ export const usePediu = create<PediuState>()(
       },
       markSplashSeen: () => set({ seenSplash: true }),
       placeOrder: () => {
-        const { cart, coupon, payment, addressId, orders } = get();
+        const { cart, coupon, payment, addressId, orders, tip, schedule, junto, points, notifications, wallet, walletTx } =
+          get();
         if (!cart.length) return null;
-        const totals = cartTotals(cart, coupon, payment);
+        const totals = cartTotals(cart, coupon, payment, points);
         const restaurant = totals.restaurant;
         if (!restaurant) return null;
+        const grand = totals.total + tip;
+        if (payment === "wallet" && wallet < grand) return null;
         const courier = COURIERS[Math.floor(Math.random() * COURIERS.length)]!;
+        const earned = Math.max(1, Math.floor(totals.total));
+        const cashback = roundMoney(grand * 0.02);
         const order: Order = {
           id: `PD-${Date.now().toString(36).toUpperCase()}`,
           restaurantId: restaurant.id,
@@ -199,22 +312,127 @@ export const usePediu = create<PediuState>()(
           subtotal: totals.subtotal,
           deliveryFee: totals.deliveryFee,
           discount: totals.discount,
-          total: totals.total,
+          tip,
+          total: grand,
+          cashback,
           status: "received",
           createdAt: Date.now(),
-          etaMins: restaurant.flash ? restaurant.deliveryMax : restaurant.deliveryMax,
+          etaMins: restaurant.deliveryMax,
           payment,
           addressId,
           coupon: coupon ?? undefined,
           courier,
           flash: restaurant.flash,
+          scheduled: schedule ?? undefined,
+          junto,
         };
-        set({ orders: [order, ...orders], cart: [], coupon: null });
+        const hello: ChatMsg = {
+          id: `${order.id}-hi`,
+          from: "courier",
+          text: `Oi, aqui é ${courier.name.split(" ")[0]}. Peguei seu Pediu.`,
+          at: Date.now(),
+        };
+        const debit: WalletTx[] =
+          payment === "wallet"
+            ? [{ id: `d-${order.id}`, label: `Pedido ${restaurant.name}`, amount: -grand, at: Date.now() }]
+            : [];
+        const credit: WalletTx = {
+          id: `c-${order.id}`,
+          label: `Cashback ${restaurant.name}`,
+          amount: cashback,
+          at: Date.now(),
+        };
+        const nextWallet = (payment === "wallet" ? wallet - grand : wallet) + cashback;
+        set({
+          orders: [order, ...orders],
+          cart: [],
+          coupon: null,
+          schedule: null,
+          junto: false,
+          points: points + earned,
+          wallet: roundMoney(nextWallet),
+          walletTx: [...debit, credit, ...walletTx].slice(0, 20),
+          chats: { ...get().chats, [order.id]: [hello] },
+          notifications: [
+            {
+              id: `n-${order.id}`,
+              title: junto ? "Pediu Junto no fogo" : "Pedido no fogo",
+              body: `${restaurant.name} · ${earned} pts · cashback ${cashback.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+              at: Date.now(),
+              read: false,
+              to: "/orders" as const,
+            },
+            ...notifications,
+          ].slice(0, 12),
+        });
         return order;
       },
       orderById: (id) => get().orders.find((o) => o.id === id),
+      rateOrder: (id, rating) => {
+        const order = get().orders.find((o) => o.id === id);
+        set({
+          orders: get().orders.map((o) => (o.id === id ? { ...o, rating } : o)),
+          ratings: order ? { ...(get().ratings ?? {}), [order.restaurantId]: rating } : (get().ratings ?? {}),
+        });
+      },
+      sendChat: (orderId, text, from = "me") => {
+        const t = text.trim();
+        if (!t) return;
+        const prev = get().chats[orderId] ?? [];
+        const msg: ChatMsg = { id: `${orderId}-${Date.now()}`, from, text: t, at: Date.now() };
+        set({ chats: { ...get().chats, [orderId]: [...prev, msg] } });
+      },
+      seedCourierChat: (orderId, text) => {
+        const prev = get().chats[orderId] ?? [];
+        if (prev.some((m) => m.from === "courier" && m.text === text)) return;
+        const msg: ChatMsg = { id: `${orderId}-c-${Date.now()}`, from: "courier", text, at: Date.now() };
+        set({ chats: { ...get().chats, [orderId]: [...prev, msg] } });
+      },
+      markNotifsRead: () =>
+        set({
+          notifications: get().notifications.map((n) => ({ ...n, read: true })),
+        }),
+      topUp: (amount) => {
+        if (amount <= 0) return;
+        const { wallet, walletTx } = get();
+        set({
+          wallet: roundMoney(wallet + amount),
+          walletTx: [
+            { id: `t-${Date.now()}`, label: "Recarga Pediu Pay", amount, at: Date.now() },
+            ...walletTx,
+          ].slice(0, 20),
+        });
+      },
+      redeemPoints: (cost, reais) => {
+        const { points, wallet, walletTx } = get();
+        if (points < cost) return false;
+        set({
+          points: points - cost,
+          wallet: roundMoney(wallet + reais),
+          walletTx: [
+            { id: `r-${Date.now()}`, label: `Clube · ${cost} pts`, amount: reais, at: Date.now() },
+            ...walletTx,
+          ].slice(0, 20),
+        });
+        return true;
+      },
     }),
-    { name: "pediu-v1", skipHydration: true },
+    {
+      name: "pediu-v2",
+      skipHydration: true,
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<PediuState>;
+        return {
+          ...current,
+          ...p,
+          ratings: p.ratings ?? {},
+          chats: p.chats ?? {},
+          notifications: p.notifications ?? current.notifications,
+          walletTx: p.walletTx ?? current.walletTx,
+          wallet: typeof p.wallet === "number" ? p.wallet : current.wallet,
+        };
+      },
+    },
   ),
 );
 

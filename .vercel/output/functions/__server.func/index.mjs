@@ -12,9 +12,9 @@ var install_page_default = "<!DOCTYPE html>\n<html lang=\"en\" class=\"device-de
 //#endregion
 //#region \0virtual:grok-og-identity
 var grokOgIdentity = { "site": {
-	"title": "Pediú",
+	"title": "Pediu",
 	"card": "custom",
-	"description": "Peça pizza, burger e açaí. Delivery brasileiro, rápido e quentinho.",
+	"description": "Pediu, chegou. Delivery brasileiro de comida e mercado.",
 	"image": "/og.jpg"
 } };
 //#endregion

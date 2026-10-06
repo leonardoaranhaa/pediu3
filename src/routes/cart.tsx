@@ -14,11 +14,12 @@ function CartPage() {
   const cart = usePediu((s) => s.cart);
   const coupon = usePediu((s) => s.coupon);
   const payment = usePediu((s) => s.payment);
+  const points = usePediu((s) => s.points);
   const updateQty = usePediu((s) => s.updateQty);
   const clearCart = usePediu((s) => s.clearCart);
   const setCoupon = usePediu((s) => s.setCoupon);
   const addToCart = usePediu((s) => s.addToCart);
-  const totals = cartTotals(cart, coupon, payment);
+  const totals = cartTotals(cart, coupon, payment, points);
   const [code, setCode] = useState(coupon ?? "");
   const restaurant = totals.restaurant;
   const suggestions = restaurant
