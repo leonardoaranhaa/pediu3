@@ -580,6 +580,16 @@ export const JUNTO = [
   { id: "joao", name: "João", initial: "J" },
 ];
 
+export const MESA = {
+  code: "AUG-7K",
+  restaurantId: "smash-club",
+  seats: [
+    { id: "mari", name: "Mari", initial: "M", dishId: "smash-club-double", note: "sem picles" },
+    { id: "joao", name: "João", initial: "J", dishId: "smash-club-fries", note: "molho extra" },
+  ],
+  offers: ["smash-club-chicken", "smash-club-shake", "smash-club-triple"],
+};
+
 export const CANNED_REPLIES = [
   "Pode deixar na portaria",
   "Já estou descendo",

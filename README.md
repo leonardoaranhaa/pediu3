@@ -12,6 +12,7 @@ App web mobile-first: cardápio, sacola, checkout (Pix / Pediu Pay / cartão / d
 - **Sacola + cupons** (PEDIU10, FLASH99, FOME20, PIX5)
 - **Checkout** com endereço, horário, Pediu Junto, gorjeta e CPF na nota
 - **Rastreio** com mapa, etapas e chat da moto
+- **Pediu Mesa** — pedido em grupo ao vivo (código AUG-7K) e divisão da conta
 - **Pediu Pay**, Clube de pontos e ajuda
 
 Tudo fica no aparelho (sem login). São Paulo · Consolação como bairro-demo.

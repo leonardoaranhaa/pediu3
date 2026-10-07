@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Heart, HelpCircle, MapPin, Ticket, UserRound, WalletCards, Zap } from "lucide-react";
+import { ChevronRight, Heart, HelpCircle, MapPin, Ticket, UserRound, Users, WalletCards, Zap } from "lucide-react";
 import { useState } from "react";
 import { RestaurantRow } from "@/components/restaurant-card";
 import { Screen } from "@/components/shell";
@@ -55,6 +55,22 @@ function ProfilePage() {
           <p className="mt-2 text-xs text-ink-fg/65">
             {tier.next ? `${points} / ${tier.next} para o próximo nível` : "Nível máximo Flash 99"}
           </p>
+        </Link>
+
+        <Link
+          to="/mesa"
+          className="mt-3 flex items-center justify-between rounded-[22px] bg-surface px-4 py-3 shadow-card transition-transform duration-150 ease-out active:scale-[0.98]"
+        >
+          <span className="inline-flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-full bg-ink text-accent">
+              <Users className="size-5" />
+            </span>
+            <span>
+              <span className="block font-display text-sm font-semibold">Pediu Mesa</span>
+              <span className="text-xs text-muted">AUG-7K · Mari e João</span>
+            </span>
+          </span>
+          <ChevronRight className="size-4 text-subtle" />
         </Link>
 
         <Link

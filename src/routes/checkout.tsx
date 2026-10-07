@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Burst } from "@/components/burst";
 import { Screen } from "@/components/shell";
 import { Button } from "@/components/ui/button";
-import { ADDRESSES, JUNTO, TIP_OPTIONS } from "@/lib/data";
+import { ADDRESSES, TIP_OPTIONS } from "@/lib/data";
 import { formatBRL, formatFee } from "@/lib/format";
 import { cartTotals, usePediu } from "@/lib/store";
 import { toast } from "sonner";
@@ -146,16 +146,9 @@ function CheckoutPage() {
             </span>
           </span>
           {junto ? (
-            <span className="flex -space-x-2">
-              {JUNTO.map((f) => (
-                <span
-                  key={f.id}
-                  className="grid size-8 place-items-center rounded-full bg-ink font-display text-xs font-bold text-ink-fg"
-                >
-                  {f.initial}
-                </span>
-              ))}
-            </span>
+            <Link to="/mesa" className="text-xs font-bold underline-offset-2">
+              Ver mesa
+            </Link>
           ) : null}
         </button>
 

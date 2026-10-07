@@ -117,6 +117,24 @@
   }
 }
 
+@keyframes mesa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mesa-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
 @keyframes splash-wipe {
   0% {
     clip-path: circle(0% at 50% 46%);

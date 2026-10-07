@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronDown, ChevronRight, MapPin, RotateCcw, ScanSearch, Sparkles, Store, Zap } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, MapPin, RotateCcw, ScanSearch, Sparkles, Store, Users, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { AddressSheet } from "@/components/address-sheet";
@@ -174,6 +174,27 @@ function Home() {
             </Link>
           </div>
           <FlashRadar />
+          <Link
+            to="/mesa"
+            className="mt-2.5 flex items-center gap-3 rounded-[24px] bg-ink p-3 text-ink-fg shadow-ink transition-transform duration-150 ease-out active:scale-[0.98]"
+          >
+            <span className="relative grid size-14 shrink-0 place-items-center">
+              <span
+                className="absolute inset-1 rounded-full border border-accent"
+                style={{ animation: "mesa-pulse 2.2s var(--ease-out-soft) infinite" }}
+              />
+              <span className="grid size-9 place-items-center rounded-full bg-accent font-display text-sm font-bold text-accent-fg">
+                <Users className="size-4" />
+              </span>
+            </span>
+            <span className="min-w-0">
+              <span className="block font-display text-[11px] font-bold uppercase tracking-wider text-accent">
+                Mesa ao vivo · AUG-7K
+              </span>
+              <span className="block font-display text-base font-bold leading-tight">Mari e João já pediram</span>
+              <span className="block text-xs text-ink-fg/70">Smash Club · divide a conta</span>
+            </span>
+          </Link>
         </section>
 
         <section className="mt-5">

@@ -15,6 +15,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ClubRouteImport } from './routes/club'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as MarketRouteImport } from './routes/market'
+import { Route as MesaRouteImport } from './routes/mesa'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SearchRouteImport } from './routes/search'
@@ -51,6 +52,11 @@ const HelpRoute = HelpRouteImport.update({
 const MarketRoute = MarketRouteImport.update({
   id: '/market',
   path: '/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MesaRoute = MesaRouteImport.update({
+  id: '/mesa',
+  path: '/mesa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/club': typeof ClubRoute
   '/help': typeof HelpRoute
   '/market': typeof MarketRoute
+  '/mesa': typeof MesaRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/club': typeof ClubRoute
   '/help': typeof HelpRoute
   '/market': typeof MarketRoute
+  '/mesa': typeof MesaRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/club': typeof ClubRoute
   '/help': typeof HelpRoute
   '/market': typeof MarketRoute
+  '/mesa': typeof MesaRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/club'
     | '/help'
     | '/market'
+    | '/mesa'
     | '/orders'
     | '/profile'
     | '/search'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/club'
     | '/help'
     | '/market'
+    | '/mesa'
     | '/orders'
     | '/profile'
     | '/search'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/club'
     | '/help'
     | '/market'
+    | '/mesa'
     | '/orders'
     | '/profile'
     | '/search'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   ClubRoute: typeof ClubRoute
   HelpRoute: typeof HelpRoute
   MarketRoute: typeof MarketRoute
+  MesaRoute: typeof MesaRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/market'
       fullPath: '/market'
       preLoaderRoute: typeof MarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mesa': {
+      id: '/mesa'
+      path: '/mesa'
+      fullPath: '/mesa'
+      preLoaderRoute: typeof MesaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClubRoute: ClubRoute,
   HelpRoute: HelpRoute,
   MarketRoute: MarketRoute,
+  MesaRoute: MesaRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,

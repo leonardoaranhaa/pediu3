@@ -8,6 +8,7 @@ import {
   getAddress,
   getDish,
   getRestaurant,
+  MESA,
   shownFee,
   type Extra,
 } from "@/lib/data";
@@ -105,6 +106,7 @@ type PediuState = {
   wallet: number;
   walletTx: WalletTx[];
   ratings: Record<string, number>;
+  mesaPicks: string[];
   setName: (name: string) => void;
   setAddress: (id: string) => void;
   setPayment: (p: PaymentMethod) => void;
@@ -128,6 +130,8 @@ type PediuState = {
   markNotifsRead: () => void;
   topUp: (amount: number) => void;
   redeemPoints: (cost: number, reais: number) => boolean;
+  toggleMesaPick: (dishId: string) => void;
+  loadMesa: () => boolean;
 };
 
 function itemKey(dishId: string, extras: Extra[], notes: string) {
@@ -245,6 +249,7 @@ export const usePediu = create<PediuState>()(
       wallet: 32.9,
       walletTx: STARTER_TX,
       ratings: {},
+      mesaPicks: [],
       setName: (name) => set({ name: name.trim() || "Você" }),
       setAddress: (id) => set({ addressId: id }),
       setPayment: (p) => set({ payment: p }),
@@ -416,6 +421,31 @@ export const usePediu = create<PediuState>()(
         });
         return true;
       },
+      toggleMesaPick: (dishId) => {
+        if (!MESA.offers.includes(dishId)) return;
+        const picks = get().mesaPicks ?? [];
+        set({
+          mesaPicks: picks.includes(dishId) ? picks.filter((id) => id !== dishId) : [...picks, dishId],
+        });
+      },
+      loadMesa: () => {
+        const picks = (get().mesaPicks ?? []).filter((id) => MESA.offers.includes(id));
+        const rows = [
+          ...MESA.seats.map((seat) => ({ dishId: seat.dishId, notes: seat.note })),
+          ...picks.map((dishId) => ({ dishId, notes: "" })),
+        ];
+        const cart: CartItem[] = [];
+        for (const row of rows) {
+          const built = buildItem({ dishId: row.dishId, extras: [], qty: 1, notes: row.notes });
+          if (!built) continue;
+          const existing = cart.find((item) => item.key === built.key);
+          if (existing) existing.qty += 1;
+          else cart.push(built);
+        }
+        if (!cart.length) return false;
+        set({ cart, coupon: null, junto: true });
+        return true;
+      },
     }),
     {
       name: "pediu-v2",
@@ -430,6 +460,7 @@ export const usePediu = create<PediuState>()(
           notifications: p.notifications ?? current.notifications,
           walletTx: p.walletTx ?? current.walletTx,
           wallet: typeof p.wallet === "number" ? p.wallet : current.wallet,
+          mesaPicks: p.mesaPicks ?? [],
         };
       },
     },
