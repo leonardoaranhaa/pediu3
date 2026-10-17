@@ -7,6 +7,7 @@ import { Screen } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { dishesOf, getRestaurant, hoursFor, isOpenNow, reviewsFor, shownFee, shownRating, type Dish, type Extra } from "@/lib/data";
 import { formatBRL, formatFee, formatRange } from "@/lib/format";
+import { SHOP_ID } from "@/lib/lane";
 import { usePediu } from "@/lib/store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,9 @@ function RestaurantPage() {
   const replaceCartWith = usePediu((s) => s.replaceCartWith);
   const userRating = usePediu((s) => s.ratings?.[id]);
   const points = usePediu((s) => s.points);
+  const shopOpen = usePediu((s) => s.shopOpen);
+  const pausedDishes = usePediu((s) => s.pausedDishes ?? []);
+  const kitchenClosed = id === SHOP_ID && shopOpen === false;
   const [activeCat, setActiveCat] = useState("Tudo");
   const [selected, setSelected] = useState<Dish | null>(null);
   const [conflict, setConflict] = useState<{
@@ -117,7 +121,11 @@ function RestaurantPage() {
 
           <p className="mt-3 text-sm leading-relaxed text-muted">{restaurant.about}</p>
 
-          {!isOpenNow(restaurant.flash) ? (
+          {kitchenClosed ? (
+            <p className="mt-3 rounded-[16px] bg-ink px-3 py-2 text-xs font-semibold text-ink-fg">
+              Loja pausada pelo lojista. A cozinha não está aceitando agora.
+            </p>
+          ) : !isOpenNow(restaurant.flash) ? (
             <p className="mt-3 rounded-[16px] bg-accent px-3 py-2 text-xs font-semibold text-accent-fg">
               Cozinha abre às 10:00. Pode pedir agora — a gente agenda.
             </p>
@@ -155,11 +163,27 @@ function RestaurantPage() {
           <ul className="mt-1 divide-y divide-border">
             {visible.map((dish) => (
               <li key={dish.id}>
-                <button type="button" onClick={() => setSelected(dish)} className="flex w-full gap-3 py-4 text-left">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (kitchenClosed) {
+                      toast.error("Loja pausada");
+                      return;
+                    }
+                    if (pausedDishes.includes(dish.id)) {
+                      toast.error("Prato pausado na cozinha");
+                      return;
+                    }
+                    setSelected(dish);
+                  }}
+                  className="flex w-full gap-3 py-4 text-left"
+                >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-display text-[15px] font-semibold leading-tight">{dish.name}</p>
-                      {dish.popular ? (
+                      {pausedDishes.includes(dish.id) ? (
+                        <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-ink-fg">pausado</span>
+                      ) : dish.popular ? (
                         <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                           popular
                         </span>

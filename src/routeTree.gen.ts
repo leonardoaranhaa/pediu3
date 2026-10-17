@@ -13,14 +13,22 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ClubRouteImport } from './routes/club'
+import { Route as FeiraRouteImport } from './routes/feira'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as LojaRouteImport } from './routes/loja'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as MesaRouteImport } from './routes/mesa'
+import { Route as MotoRouteImport } from './routes/moto'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as TasteRouteImport } from './routes/taste'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as FeiraGradeRouteImport } from './routes/feira.grade'
+import { Route as LojaCardapioRouteImport } from './routes/loja.cardapio'
+import { Route as MarketIndexRouteImport } from './routes/market.index'
+import { Route as MarketIdRouteImport } from './routes/market.$id'
+import { Route as MotoIdRouteImport } from './routes/moto.$id'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 
@@ -44,9 +52,19 @@ const ClubRoute = ClubRouteImport.update({
   path: '/club',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeiraRoute = FeiraRouteImport.update({
+  id: '/feira',
+  path: '/feira',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LojaRoute = LojaRouteImport.update({
+  id: '/loja',
+  path: '/loja',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketRoute = MarketRouteImport.update({
@@ -57,6 +75,11 @@ const MarketRoute = MarketRouteImport.update({
 const MesaRoute = MesaRouteImport.update({
   id: '/mesa',
   path: '/mesa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotoRoute = MotoRouteImport.update({
+  id: '/moto',
+  path: '/moto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -84,6 +107,31 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeiraGradeRoute = FeiraGradeRouteImport.update({
+  id: '/grade',
+  path: '/grade',
+  getParentRoute: () => FeiraRoute,
+} as any)
+const LojaCardapioRoute = LojaCardapioRouteImport.update({
+  id: '/cardapio',
+  path: '/cardapio',
+  getParentRoute: () => LojaRoute,
+} as any)
+const MarketIndexRoute = MarketIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketRoute,
+} as any)
+const MarketIdRoute = MarketIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MarketRoute,
+} as any)
+const MotoIdRoute = MotoIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MotoRoute,
+} as any)
 const OrderIdRoute = OrderIdRouteImport.update({
   id: '/order/$id',
   path: '/order/$id',
@@ -100,32 +148,47 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
+  '/feira': typeof FeiraRouteWithChildren
   '/help': typeof HelpRoute
-  '/market': typeof MarketRoute
+  '/loja': typeof LojaRouteWithChildren
+  '/market': typeof MarketRouteWithChildren
   '/mesa': typeof MesaRoute
+  '/moto': typeof MotoRouteWithChildren
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
   '/wallet': typeof WalletRoute
+  '/feira/grade': typeof FeiraGradeRoute
+  '/loja/cardapio': typeof LojaCardapioRoute
+  '/market/$id': typeof MarketIdRoute
+  '/moto/$id': typeof MotoIdRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/market/': typeof MarketIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
+  '/feira': typeof FeiraRouteWithChildren
   '/help': typeof HelpRoute
-  '/market': typeof MarketRoute
+  '/loja': typeof LojaRouteWithChildren
   '/mesa': typeof MesaRoute
+  '/moto': typeof MotoRouteWithChildren
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
   '/wallet': typeof WalletRoute
+  '/feira/grade': typeof FeiraGradeRoute
+  '/loja/cardapio': typeof LojaCardapioRoute
+  '/market/$id': typeof MarketIdRoute
+  '/moto/$id': typeof MotoIdRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/market': typeof MarketIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,16 +196,24 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
+  '/feira': typeof FeiraRouteWithChildren
   '/help': typeof HelpRoute
-  '/market': typeof MarketRoute
+  '/loja': typeof LojaRouteWithChildren
+  '/market': typeof MarketRouteWithChildren
   '/mesa': typeof MesaRoute
+  '/moto': typeof MotoRouteWithChildren
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
   '/wallet': typeof WalletRoute
+  '/feira/grade': typeof FeiraGradeRoute
+  '/loja/cardapio': typeof LojaCardapioRoute
+  '/market/$id': typeof MarketIdRoute
+  '/moto/$id': typeof MotoIdRoute
   '/order/$id': typeof OrderIdRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/market/': typeof MarketIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,48 +222,71 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/club'
+    | '/feira'
     | '/help'
+    | '/loja'
     | '/market'
     | '/mesa'
+    | '/moto'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
     | '/wallet'
+    | '/feira/grade'
+    | '/loja/cardapio'
+    | '/market/$id'
+    | '/moto/$id'
     | '/order/$id'
     | '/restaurants/$id'
+    | '/market/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cart'
     | '/checkout'
     | '/club'
+    | '/feira'
     | '/help'
-    | '/market'
+    | '/loja'
     | '/mesa'
+    | '/moto'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
     | '/wallet'
+    | '/feira/grade'
+    | '/loja/cardapio'
+    | '/market/$id'
+    | '/moto/$id'
     | '/order/$id'
     | '/restaurants/$id'
+    | '/market'
   id:
     | '__root__'
     | '/'
     | '/cart'
     | '/checkout'
     | '/club'
+    | '/feira'
     | '/help'
+    | '/loja'
     | '/market'
     | '/mesa'
+    | '/moto'
     | '/orders'
     | '/profile'
     | '/search'
     | '/taste'
     | '/wallet'
+    | '/feira/grade'
+    | '/loja/cardapio'
+    | '/market/$id'
+    | '/moto/$id'
     | '/order/$id'
     | '/restaurants/$id'
+    | '/market/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,9 +294,12 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   ClubRoute: typeof ClubRoute
+  FeiraRoute: typeof FeiraRouteWithChildren
   HelpRoute: typeof HelpRoute
-  MarketRoute: typeof MarketRoute
+  LojaRoute: typeof LojaRouteWithChildren
+  MarketRoute: typeof MarketRouteWithChildren
   MesaRoute: typeof MesaRoute
+  MotoRoute: typeof MotoRouteWithChildren
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
@@ -242,11 +339,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feira': {
+      id: '/feira'
+      path: '/feira'
+      fullPath: '/feira'
+      preLoaderRoute: typeof FeiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/help': {
       id: '/help'
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loja': {
+      id: '/loja'
+      path: '/loja'
+      fullPath: '/loja'
+      preLoaderRoute: typeof LojaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/market': {
@@ -261,6 +372,13 @@ declare module '@tanstack/react-router' {
       path: '/mesa'
       fullPath: '/mesa'
       preLoaderRoute: typeof MesaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moto': {
+      id: '/moto'
+      path: '/moto'
+      fullPath: '/moto'
+      preLoaderRoute: typeof MotoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -298,6 +416,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feira/grade': {
+      id: '/feira/grade'
+      path: '/grade'
+      fullPath: '/feira/grade'
+      preLoaderRoute: typeof FeiraGradeRouteImport
+      parentRoute: typeof FeiraRoute
+    }
+    '/loja/cardapio': {
+      id: '/loja/cardapio'
+      path: '/cardapio'
+      fullPath: '/loja/cardapio'
+      preLoaderRoute: typeof LojaCardapioRouteImport
+      parentRoute: typeof LojaRoute
+    }
+    '/market/': {
+      id: '/market/'
+      path: '/'
+      fullPath: '/market/'
+      preLoaderRoute: typeof MarketIndexRouteImport
+      parentRoute: typeof MarketRoute
+    }
+    '/market/$id': {
+      id: '/market/$id'
+      path: '/$id'
+      fullPath: '/market/$id'
+      preLoaderRoute: typeof MarketIdRouteImport
+      parentRoute: typeof MarketRoute
+    }
+    '/moto/$id': {
+      id: '/moto/$id'
+      path: '/$id'
+      fullPath: '/moto/$id'
+      preLoaderRoute: typeof MotoIdRouteImport
+      parentRoute: typeof MotoRoute
+    }
     '/order/$id': {
       id: '/order/$id'
       path: '/order/$id'
@@ -315,14 +468,60 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface FeiraRouteChildren {
+  FeiraGradeRoute: typeof FeiraGradeRoute
+}
+
+const FeiraRouteChildren: FeiraRouteChildren = {
+  FeiraGradeRoute: FeiraGradeRoute,
+}
+
+const FeiraRouteWithChildren = FeiraRoute._addFileChildren(FeiraRouteChildren)
+
+interface LojaRouteChildren {
+  LojaCardapioRoute: typeof LojaCardapioRoute
+}
+
+const LojaRouteChildren: LojaRouteChildren = {
+  LojaCardapioRoute: LojaCardapioRoute,
+}
+
+const LojaRouteWithChildren = LojaRoute._addFileChildren(LojaRouteChildren)
+
+interface MarketRouteChildren {
+  MarketIdRoute: typeof MarketIdRoute
+  MarketIndexRoute: typeof MarketIndexRoute
+}
+
+const MarketRouteChildren: MarketRouteChildren = {
+  MarketIdRoute: MarketIdRoute,
+  MarketIndexRoute: MarketIndexRoute,
+}
+
+const MarketRouteWithChildren =
+  MarketRoute._addFileChildren(MarketRouteChildren)
+
+interface MotoRouteChildren {
+  MotoIdRoute: typeof MotoIdRoute
+}
+
+const MotoRouteChildren: MotoRouteChildren = {
+  MotoIdRoute: MotoIdRoute,
+}
+
+const MotoRouteWithChildren = MotoRoute._addFileChildren(MotoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   ClubRoute: ClubRoute,
+  FeiraRoute: FeiraRouteWithChildren,
   HelpRoute: HelpRoute,
-  MarketRoute: MarketRoute,
+  LojaRoute: LojaRouteWithChildren,
+  MarketRoute: MarketRouteWithChildren,
   MesaRoute: MesaRoute,
+  MotoRoute: MotoRouteWithChildren,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
