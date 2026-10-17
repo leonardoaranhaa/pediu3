@@ -14,6 +14,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ClubRouteImport } from './routes/club'
 import { Route as FeiraRouteImport } from './routes/feira'
+import { Route as GoliveRouteImport } from './routes/golive'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as MarketRouteImport } from './routes/market'
@@ -55,6 +56,11 @@ const ClubRoute = ClubRouteImport.update({
 const FeiraRoute = FeiraRouteImport.update({
   id: '/feira',
   path: '/feira',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoliveRoute = GoliveRouteImport.update({
+  id: '/golive',
+  path: '/golive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
   '/feira': typeof FeiraRouteWithChildren
+  '/golive': typeof GoliveRoute
   '/help': typeof HelpRoute
   '/loja': typeof LojaRouteWithChildren
   '/market': typeof MarketRouteWithChildren
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
   '/feira': typeof FeiraRouteWithChildren
+  '/golive': typeof GoliveRoute
   '/help': typeof HelpRoute
   '/loja': typeof LojaRouteWithChildren
   '/mesa': typeof MesaRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/club': typeof ClubRoute
   '/feira': typeof FeiraRouteWithChildren
+  '/golive': typeof GoliveRoute
   '/help': typeof HelpRoute
   '/loja': typeof LojaRouteWithChildren
   '/market': typeof MarketRouteWithChildren
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/club'
     | '/feira'
+    | '/golive'
     | '/help'
     | '/loja'
     | '/market'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/club'
     | '/feira'
+    | '/golive'
     | '/help'
     | '/loja'
     | '/mesa'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/club'
     | '/feira'
+    | '/golive'
     | '/help'
     | '/loja'
     | '/market'
@@ -295,6 +307,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   ClubRoute: typeof ClubRoute
   FeiraRoute: typeof FeiraRouteWithChildren
+  GoliveRoute: typeof GoliveRoute
   HelpRoute: typeof HelpRoute
   LojaRoute: typeof LojaRouteWithChildren
   MarketRoute: typeof MarketRouteWithChildren
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/feira'
       fullPath: '/feira'
       preLoaderRoute: typeof FeiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/golive': {
+      id: '/golive'
+      path: '/golive'
+      fullPath: '/golive'
+      preLoaderRoute: typeof GoliveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -517,6 +537,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   ClubRoute: ClubRoute,
   FeiraRoute: FeiraRouteWithChildren,
+  GoliveRoute: GoliveRoute,
   HelpRoute: HelpRoute,
   LojaRoute: LojaRouteWithChildren,
   MarketRoute: MarketRouteWithChildren,

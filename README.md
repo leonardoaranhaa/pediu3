@@ -15,7 +15,7 @@ App web mobile-first: cardápio, sacola, checkout (Pix / Pediu Pay / cartão / d
 - **Pediu Mesa** — pedido em grupo ao vivo (código AUG-7K) e divisão da conta
 - **Lojista** — cozinha do Smash Club: aceitar, preparar, pausar prato e fechar a loja
 - **Motoboy** — radar, corrida com mapa e ganho do dia
-- **Pediu Pay**, Clube de pontos e ajuda
+- **Go Live** — um pedido de estreia do mercado até a porta, com cliente, balcão e moto na mesma lista
 
 Tudo fica no aparelho (sem login). São Paulo · Consolação como bairro-demo.
 

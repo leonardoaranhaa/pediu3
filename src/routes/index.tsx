@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronDown, ChevronRight, MapPin, RotateCcw, ScanSearch, Sparkles, Store, Users, Zap } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, MapPin, Radio, RotateCcw, ScanSearch, Sparkles, Store, Users, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { AddressSheet } from "@/components/address-sheet";
@@ -174,6 +174,16 @@ function Home() {
             </Link>
           </div>
           <FlashRadar />
+          <Link
+            to="/golive"
+            className="mt-2.5 flex items-center justify-between rounded-[22px] bg-accent px-4 py-3 text-accent-fg shadow-card active:scale-[0.98]"
+          >
+            <span>
+              <span className="block font-display text-[11px] font-bold uppercase tracking-wider">Go Live</span>
+              <span className="block font-display text-sm font-bold">Abrir a cidade</span>
+            </span>
+            <Radio className="size-5" />
+          </Link>
           <Link
             to="/mesa"
             className="mt-2.5 flex items-center gap-3 rounded-[24px] bg-ink p-3 text-ink-fg shadow-ink transition-transform duration-150 ease-out active:scale-[0.98]"
