@@ -8,11 +8,13 @@ App web mobile-first: cardápio, sacola, checkout (Pix / Pediu Pay / cartão / d
 
 - **Início** com stories, promoções, radar Flash 99 e ticker ao vivo
 - **Sabor do momento** — a fome escolhe o cardápio
-- **Mercado Pediu** em até 25 min
+- **Pediu Entregas** — mercados de cidade pequena: o mercado publica a grade, o cliente monta a lista e combina com o entregador. O Pediu intermedia o valor até a retirada.
 - **Sacola + cupons** (PEDIU10, FLASH99, FOME20, PIX5)
 - **Checkout** com endereço, horário, Pediu Junto, gorjeta e CPF na nota
 - **Rastreio** com mapa, etapas e chat da moto
 - **Pediu Mesa** — pedido em grupo ao vivo (código AUG-7K) e divisão da conta
+- **Lojista** — cozinha do Smash Club: aceitar, preparar, pausar prato e fechar a loja
+- **Motoboy** — radar, corrida com mapa e ganho do dia
 - **Pediu Pay**, Clube de pontos e ajuda
 
 Tudo fica no aparelho (sem login). São Paulo · Consolação como bairro-demo.

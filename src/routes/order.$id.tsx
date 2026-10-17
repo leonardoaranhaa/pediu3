@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { deliveryClock, useNow, type DeliveryStatus } from "@/lib/clock";
 import { getAddress } from "@/lib/data";
 import { formatBRL, formatRemain } from "@/lib/format";
-import { STATUS_LABEL, usePediu } from "@/lib/store";
+import { type DeliveryRun, type KitchenTicket } from "@/lib/lane";
+import { STATUS_LABEL, usePediu, type Order } from "@/lib/store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,8 @@ const COURIER_LINES: Record<DeliveryStatus, string> = {
 function OrderTracking() {
   const { id } = Route.useParams();
   const order = usePediu((s) => s.orders.find((o) => o.id === id));
+  const tickets = usePediu((s) => s.tickets ?? []);
+  const runs = usePediu((s) => s.runs ?? []);
   const seed = usePediu((s) => s.seedCourierChat);
   const rateOrder = usePediu((s) => s.rateOrder);
   const now = useNow();
@@ -44,7 +47,7 @@ function OrderTracking() {
   const status = clock?.status ?? "received";
 
   useEffect(() => {
-    if (!order) return;
+    if (!order || order.feira) return;
     seed(order.id, COURIER_LINES[status]);
   }, [order, status, seed]);
 
@@ -59,6 +62,10 @@ function OrderTracking() {
         </div>
       </Screen>
     );
+  }
+
+  if (order.feira) {
+    return <FeiraTrack order={order} tickets={tickets} runs={runs} />;
   }
 
   const moving = status === "on_the_way" || status === "arriving";
@@ -274,5 +281,87 @@ function EtaBadge({
         {status === "delivered" ? "ok" : `${remain}`}
       </span>
     </span>
+  );
+}
+
+function FeiraTrack({
+  order,
+  tickets,
+  runs,
+}: {
+  order: Order;
+  tickets: KitchenTicket[];
+  runs: DeliveryRun[];
+}) {
+  const [chatOpen, setChatOpen] = useState(false);
+  const address = getAddress(order.addressId);
+  const ticket = tickets.find((item) => item.orderId === order.id);
+  const run = runs.find((item) => item.ticketId === ticket?.id);
+  const phase =
+    run?.step === "done" || ticket?.status === "done"
+      ? "Entregue"
+      : run?.step === "to_door" || run?.step === "picked"
+        ? "Moto a caminho"
+        : run?.step === "to_shop"
+          ? "Moto indo buscar"
+          : run?.step === "waiting"
+        ? `Combinado com ${order.courier.name.split(" ")[0]}`
+        : ticket?.status === "ready"
+            ? "No balcão"
+            : ticket?.status === "preparing"
+              ? "Separando"
+              : ticket?.status === "rejected"
+                ? "Recusada"
+                : "Lista no mercado";
+
+  return (
+    <Screen tabs={false}>
+      <div className="bg-ink px-4 pb-6 pt-[max(0.9rem,env(safe-area-inset-top))] text-ink-fg">
+        <Link to="/orders" className="grid size-11 place-items-center rounded-full bg-ink-fg/10" aria-label="Voltar">
+          <ChevronLeft className="size-5" />
+        </Link>
+        <p className="mt-4 font-display text-[11px] font-bold uppercase tracking-wider text-accent">Pediu Entregas</p>
+        <h1 className="mt-1 font-display text-3xl font-extrabold leading-none">{phase}</h1>
+        <p className="mt-2 text-sm text-ink-fg/70">
+          {order.restaurantName} separa a grade. {order.courier.name.split(" ")[0]} busca no balcão e deixa em{" "}
+          {order.dropoff ?? address.neighborhood}. O Pediu segura {formatBRL(order.total)} até a retirada.
+        </p>
+      </div>
+      <div className="px-4 pb-10 pt-5">
+        <div className="rounded-[22px] bg-surface p-4 shadow-card">
+          <p className="font-display text-sm font-semibold">{order.courier.name}</p>
+          <p className="mt-1 text-sm text-muted">
+            {order.courier.vehicle} · {order.handoff}
+          </p>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {order.items.map((item) => (
+              <li key={item.key} className="flex justify-between gap-3">
+                <span>
+                  {item.qty}× {item.name}
+                </span>
+                <span className="tabular-nums">{formatBRL(item.unitPrice * item.qty)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex justify-between text-xs text-muted">
+            <span>Entrega</span>
+            <span className="tabular-nums">{formatBRL(order.deliveryFee)}</span>
+          </div>
+          <div className="mt-2 flex justify-between font-display text-sm font-bold">
+            <span>Total</span>
+            <span className="tabular-nums">{formatBRL(order.total)}</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setChatOpen(true)}
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-ink text-sm font-semibold text-ink-fg"
+        >
+          <MessageCircle className="size-4" />
+          Combinar com a moto
+        </button>
+      </div>
+      <CourierChat orderId={order.id} courierName={order.courier.name} open={chatOpen} onOpenChange={setChatOpen} />
+    </Screen>
   );
 }

@@ -12,7 +12,16 @@ import {
   shownFee,
   type Extra,
 } from "@/lib/data";
+import { getFeiraProduct, getMarket, getRider, getStop } from "@/lib/feira";
 import { deliveryClock, STATUS_LABEL, useNow, type DeliveryStatus } from "@/lib/clock";
+import {
+  offerFromTicket,
+  SEED_RUNS,
+  SEED_TICKETS,
+  ticketFromOrder,
+  type DeliveryRun,
+  type KitchenTicket,
+} from "@/lib/lane";
 
 export type CartItem = {
   key: string;
@@ -77,6 +86,9 @@ export type Order = {
   scheduled?: string;
   junto?: boolean;
   rating?: number;
+  feira?: boolean;
+  handoff?: string;
+  dropoff?: string;
 };
 
 type AddPayload = {
@@ -107,6 +119,18 @@ type PediuState = {
   walletTx: WalletTx[];
   ratings: Record<string, number>;
   mesaPicks: string[];
+  shopOpen: boolean;
+  pausedDishes: string[];
+  tickets: KitchenTicket[];
+  runs: DeliveryRun[];
+  motoOnline: boolean;
+  motoEarnings: number;
+  motoTrips: number;
+  feiraMarketId: string | null;
+  feiraQty: Record<string, number>;
+  feiraOut: string[];
+  feiraStopId: string;
+  feiraShopId: string;
   setName: (name: string) => void;
   setAddress: (id: string) => void;
   setPayment: (p: PaymentMethod) => void;
@@ -132,6 +156,20 @@ type PediuState = {
   redeemPoints: (cost: number, reais: number) => boolean;
   toggleMesaPick: (dishId: string) => void;
   loadMesa: () => boolean;
+  setShopOpen: (open: boolean) => void;
+  toggleDishPause: (dishId: string) => void;
+  acceptTicket: (id: string) => void;
+  rejectTicket: (id: string) => void;
+  readyTicket: (id: string) => void;
+  setMotoOnline: (online: boolean) => void;
+  acceptRun: (id: string) => boolean;
+  advanceRun: (id: string) => void;
+  setFeiraQty: (marketId: string, productId: string, qty: number) => void;
+  clearFeira: () => void;
+  toggleFeiraOut: (productId: string) => void;
+  setFeiraStop: (id: string) => void;
+  setFeiraShop: (id: string) => void;
+  placeFeira: (note: string, riderId: string) => Order | null;
 };
 
 function itemKey(dishId: string, extras: Extra[], notes: string) {
@@ -250,6 +288,18 @@ export const usePediu = create<PediuState>()(
       walletTx: STARTER_TX,
       ratings: {},
       mesaPicks: [],
+      shopOpen: true,
+      pausedDishes: [],
+      tickets: SEED_TICKETS,
+      runs: SEED_RUNS,
+      motoOnline: true,
+      motoEarnings: 86.4,
+      motoTrips: 6,
+      feiraMarketId: null,
+      feiraQty: {},
+      feiraOut: [],
+      feiraStopId: "casa",
+      feiraShopId: "central",
       setName: (name) => set({ name: name.trim() || "Você" }),
       setAddress: (id) => set({ addressId: id }),
       setPayment: (p) => set({ payment: p }),
@@ -348,6 +398,8 @@ export const usePediu = create<PediuState>()(
           at: Date.now(),
         };
         const nextWallet = (payment === "wallet" ? wallet - grand : wallet) + cashback;
+        const { tickets } = get();
+        const incoming = ticketFromOrder(order);
         set({
           orders: [order, ...orders],
           cart: [],
@@ -358,6 +410,7 @@ export const usePediu = create<PediuState>()(
           wallet: roundMoney(nextWallet),
           walletTx: [...debit, credit, ...walletTx].slice(0, 20),
           chats: { ...get().chats, [order.id]: [hello] },
+          tickets: incoming ? [incoming, ...tickets.filter((ticket) => ticket.id !== incoming.id)] : tickets,
           notifications: [
             {
               id: `n-${order.id}`,
@@ -446,6 +499,222 @@ export const usePediu = create<PediuState>()(
         set({ cart, coupon: null, junto: true });
         return true;
       },
+      setShopOpen: (open) => set({ shopOpen: open }),
+      toggleDishPause: (dishId) => {
+        const paused = get().pausedDishes ?? [];
+        set({
+          pausedDishes: paused.includes(dishId) ? paused.filter((id) => id !== dishId) : [...paused, dishId],
+        });
+      },
+      acceptTicket: (id) =>
+        set({
+          tickets: get().tickets.map((ticket) =>
+            ticket.id === id && ticket.status === "new" ? { ...ticket, status: "preparing" } : ticket,
+          ),
+        }),
+      rejectTicket: (id) =>
+        set({
+          tickets: get().tickets.map((ticket) =>
+            ticket.id === id && ticket.status === "new" ? { ...ticket, status: "rejected" } : ticket,
+          ),
+        }),
+      readyTicket: (id) => {
+        const tickets = get().tickets.map((ticket) =>
+          ticket.id === id && ticket.status === "preparing" ? { ...ticket, status: "ready" as const } : ticket,
+        );
+        const ready = tickets.find((ticket) => ticket.id === id && ticket.status === "ready");
+        const runs = get().runs ?? [];
+        const existing = runs.find((run) => run.ticketId === id);
+        const nextRuns = !ready
+          ? runs
+          : existing
+            ? runs.map((run) =>
+                run.ticketId === id
+                  ? { ...run, marketReady: true, step: run.step === "waiting" ? ("to_shop" as const) : run.step }
+                  : run,
+              )
+            : [offerFromTicket(ready), ...runs];
+        set({ tickets, runs: nextRuns });
+      },
+      setMotoOnline: (online) => set({ motoOnline: online }),
+      acceptRun: (id) => {
+        if (!get().motoOnline) return false;
+        const runs = get().runs ?? [];
+        if (!runs.some((run) => run.id === id && run.step === "offer")) return false;
+        set({
+          runs: runs.map((run) =>
+            run.id === id ? { ...run, step: run.feira && !run.marketReady ? "waiting" : "to_shop" } : run,
+          ),
+        });
+        return true;
+      },
+      advanceRun: (id) => {
+        const runs = get().runs ?? [];
+        const run = runs.find((item) => item.id === id);
+        if (!run) return;
+        const next: Record<DeliveryRun["step"], DeliveryRun["step"] | null> = {
+          offer: null,
+          waiting: null,
+          to_shop: "picked",
+          picked: "to_door",
+          to_door: "done",
+          done: null,
+        };
+        const step = next[run.step];
+        if (!step) return;
+        const finished = step === "done";
+        set({
+          runs: runs.map((item) => (item.id === id ? { ...item, step } : item)),
+          tickets: finished
+            ? get().tickets.map((ticket) => (ticket.id === run.ticketId ? { ...ticket, status: "done" } : ticket))
+            : get().tickets,
+          motoEarnings: finished ? roundMoney(get().motoEarnings + run.payout) : get().motoEarnings,
+          motoTrips: finished ? get().motoTrips + 1 : get().motoTrips,
+        });
+      },
+      setFeiraQty: (marketId, productId, qty) => {
+        const currentId = get().feiraMarketId;
+        const same = !currentId || currentId === marketId;
+        const next = same ? { ...(get().feiraQty ?? {}) } : {};
+        if (qty <= 0) delete next[productId];
+        else next[productId] = qty;
+        const empty = Object.keys(next).length === 0;
+        set({ feiraQty: next, feiraMarketId: empty ? null : marketId });
+      },
+      clearFeira: () => set({ feiraQty: {}, feiraMarketId: null }),
+      toggleFeiraOut: (productId) => {
+        const out = get().feiraOut ?? [];
+        set({
+          feiraOut: out.includes(productId) ? out.filter((id) => id !== productId) : [...out, productId],
+        });
+      },
+      setFeiraStop: (id) => set({ feiraStopId: id }),
+      setFeiraShop: (id) => set({ feiraShopId: id }),
+      placeFeira: (note, riderId) => {
+        const marketId = get().feiraMarketId;
+        const market = getMarket(marketId);
+        const rider = getRider(riderId);
+        if (!market || !rider) return null;
+        const qty = get().feiraQty ?? {};
+        const out = get().feiraOut ?? [];
+        const lines = Object.entries(qty)
+          .map(([id, count]) => ({ product: getFeiraProduct(id), count }))
+          .filter((line) => line.product && line.count > 0 && !out.includes(line.product.id));
+        if (!lines.length) return null;
+        const { payment, orders, points, notifications, wallet, walletTx, name, feiraStopId } = get();
+        const stop = getStop(feiraStopId);
+        const subtotal = roundMoney(lines.reduce((sum, line) => sum + line.product!.price * line.count, 0));
+        const total = roundMoney(subtotal + rider.fee);
+        if (payment === "wallet" && wallet < total) return null;
+        const items: CartItem[] = lines.map((line) => ({
+          key: line.product!.id,
+          dishId: line.product!.id,
+          restaurantId: market.id,
+          name: line.product!.name,
+          image: line.product!.image,
+          unitPrice: line.product!.price,
+          extras: [],
+          qty: line.count,
+          notes: line.product!.unit,
+        }));
+        const order: Order = {
+          id: `PD-${Date.now().toString(36).toUpperCase()}`,
+          restaurantId: market.id,
+          restaurantName: market.name,
+          restaurantImage: market.image,
+          items,
+          subtotal,
+          deliveryFee: rider.fee,
+          discount: 0,
+          tip: 0,
+          total,
+          cashback: roundMoney(total * 0.02),
+          status: "received",
+          createdAt: Date.now(),
+          etaMins: 50,
+          payment,
+          addressId: stop.id,
+          courier: {
+            name: rider.name,
+            vehicle: rider.vehicle,
+            plate: rider.plate,
+            rating: rider.rating,
+            trips: rider.trips,
+            hue: rider.hue,
+          },
+          flash: false,
+          feira: true,
+          handoff: note,
+          dropoff: `${stop.label} · ${stop.street}`,
+        };
+        const ticket: KitchenTicket = {
+          id: `fr-${order.id}`,
+          kind: "feira",
+          shop: market.name,
+          pickup: market.street,
+          note,
+          orderId: order.id,
+          customer: name.trim() || "Cliente",
+          neighborhood: stop.neighborhood,
+          items: items.map((item) => ({ name: `${item.name} (${item.notes})`, qty: item.qty })),
+          total,
+          status: "new",
+          flash: false,
+          createdAt: order.createdAt,
+        };
+        const run: DeliveryRun = {
+          id: `run-${ticket.id}`,
+          ticketId: ticket.id,
+          shop: market.name,
+          pickup: market.street,
+          dropoff: `${stop.street} · ${stop.neighborhood}`,
+          customer: ticket.customer,
+          payout: rider.fee,
+          km: market.km,
+          itemCount: items.reduce((sum, item) => sum + item.qty, 0),
+          step: "offer",
+          flash: false,
+          feira: true,
+          note,
+          marketReady: false,
+        };
+        const hello: ChatMsg = {
+          id: `${order.id}-hi`,
+          from: "courier",
+          text: `${rider.name.split(" ")[0]} aqui. ${note}. Busco no ${market.name} quando separarem.`,
+          at: Date.now(),
+        };
+        const cashback = order.cashback;
+        const debit: WalletTx[] =
+          payment === "wallet" ? [{ id: `d-${order.id}`, label: `Entrega ${market.name}`, amount: -total, at: Date.now() }] : [];
+        set({
+          orders: [order, ...orders],
+          feiraQty: {},
+          feiraMarketId: null,
+          points: points + Math.max(1, Math.floor(subtotal)),
+          wallet: roundMoney((payment === "wallet" ? wallet - total : wallet) + cashback),
+          walletTx: [
+            ...debit,
+            { id: `c-${order.id}`, label: `Cashback ${market.name}`, amount: cashback, at: Date.now() },
+            ...walletTx,
+          ].slice(0, 20),
+          chats: { ...get().chats, [order.id]: [hello] },
+          tickets: [ticket, ...get().tickets],
+          runs: [run, ...(get().runs ?? [])],
+          notifications: [
+            {
+              id: `n-${order.id}`,
+              title: `Combinado com ${rider.name.split(" ")[0]}`,
+              body: `${market.name} separa a lista. O Pediu segura o valor até a moto retirar.`,
+              at: Date.now(),
+              read: false,
+              to: "/orders" as const,
+            },
+            ...notifications,
+          ].slice(0, 12),
+        });
+        return order;
+      },
     }),
     {
       name: "pediu-v2",
@@ -461,6 +730,18 @@ export const usePediu = create<PediuState>()(
           walletTx: p.walletTx ?? current.walletTx,
           wallet: typeof p.wallet === "number" ? p.wallet : current.wallet,
           mesaPicks: p.mesaPicks ?? [],
+          shopOpen: p.shopOpen ?? true,
+          pausedDishes: p.pausedDishes ?? [],
+          tickets: p.tickets ?? current.tickets,
+          runs: p.runs ?? current.runs,
+          motoOnline: p.motoOnline ?? true,
+          motoEarnings: typeof p.motoEarnings === "number" ? p.motoEarnings : current.motoEarnings,
+          motoTrips: typeof p.motoTrips === "number" ? p.motoTrips : current.motoTrips,
+          feiraMarketId: p.feiraMarketId ?? null,
+          feiraQty: p.feiraQty ?? {},
+          feiraOut: p.feiraOut ?? [],
+          feiraStopId: p.feiraStopId ?? "casa",
+          feiraShopId: p.feiraShopId ?? "central",
         };
       },
     },

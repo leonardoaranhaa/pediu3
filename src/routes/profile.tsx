@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Heart, HelpCircle, MapPin, Ticket, UserRound, Users, WalletCards, Zap } from "lucide-react";
+import { Bike, ChevronRight, Heart, HelpCircle, MapPin, ShoppingBasket, Store, Ticket, UserRound, Users, WalletCards, Zap } from "lucide-react";
 import { useState } from "react";
 import { RestaurantRow } from "@/components/restaurant-card";
 import { Screen } from "@/components/shell";
@@ -162,6 +162,29 @@ function ProfilePage() {
               {favRestaurants.map((r) => (r ? <RestaurantRow key={r.id} restaurant={r} /> : null))}
             </div>
           )}
+        </section>
+
+        <section className="mt-5">
+          <p className="font-display text-sm font-semibold">Trabalhar no Pediu</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Link to="/loja" className="rounded-[22px] bg-ink p-3 text-ink-fg shadow-ink active:scale-[0.98]">
+              <Store className="size-5 text-accent" />
+              <span className="mt-6 block font-display text-sm font-bold">Lojista</span>
+              <span className="text-xs text-ink-fg/70">Cozinha Smash</span>
+            </Link>
+            <Link to="/moto" className="rounded-[22px] bg-primary p-3 text-primary-fg shadow-red active:scale-[0.98]">
+              <Bike className="size-5" />
+              <span className="mt-6 block font-display text-sm font-bold">Motoboy</span>
+              <span className="text-xs text-primary-fg/80">Radar Flash</span>
+            </Link>
+          </div>
+          <Link to="/feira" className="mt-2 flex items-center gap-3 rounded-[22px] bg-accent p-3 text-accent-fg active:scale-[0.98]">
+            <ShoppingBasket className="size-5" />
+            <span>
+              <span className="block font-display text-sm font-bold">Balcão do mercado</span>
+              <span className="text-xs text-accent-fg/80">Grade, lista e retirada</span>
+            </span>
+          </Link>
         </section>
 
         <Link

@@ -169,8 +169,8 @@ function Home() {
               className="relative overflow-hidden rounded-[24px] bg-ink p-4 text-ink-fg transition-transform duration-150 ease-out active:scale-[0.97]"
             >
               <Store className="size-5 text-accent" />
-              <p className="mt-6 font-display text-base font-bold leading-tight">Mercado Flash</p>
-              <p className="mt-1 text-xs text-ink-fg/70">Até 25 min</p>
+              <p className="mt-6 font-display text-base font-bold leading-tight">Pediu Entregas</p>
+              <p className="mt-1 text-xs text-ink-fg/70">Lista do mercado</p>
             </Link>
           </div>
           <FlashRadar />
