@@ -144,6 +144,14 @@ export const COUPONS: Coupon[] = [
     value: 5,
     min: 25,
   },
+  {
+    code: "FEIRA8",
+    label: "R$ 8 na lista",
+    description: "Mercado da cidade, a partir de R$ 30",
+    type: "fixed",
+    value: 8,
+    min: 30,
+  },
 ];
 
 export const CATEGORIES: Category[] = [

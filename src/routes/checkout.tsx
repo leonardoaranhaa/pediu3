@@ -58,6 +58,10 @@ function CheckoutPage() {
   }
 
   function pay() {
+    if (payment === "fiado") {
+      toast.error("Fiado é só na lista do mercado");
+      return;
+    }
     if (payment === "wallet" && wallet < grand) {
       toast.error("Saldo insuficiente na Pediu Pay");
       return;

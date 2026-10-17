@@ -125,10 +125,15 @@ function ProfilePage() {
         </section>
 
         <section className="mt-5">
-          <p className="inline-flex items-center gap-1.5 font-display text-sm font-semibold">
-            <Ticket className="size-4 text-primary" />
-            Cupons
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="inline-flex items-center gap-1.5 font-display text-sm font-semibold">
+              <Ticket className="size-4 text-primary" />
+              Cupons
+            </p>
+            <Link to="/vantagens" className="text-xs font-bold text-primary">
+              Pediu Vantagens
+            </Link>
+          </div>
           <div className="mt-2 grid gap-2">
             {COUPONS.map((c) => (
               <button

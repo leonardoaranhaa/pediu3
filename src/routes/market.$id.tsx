@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Screen } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { FEIRA_STOPS, ENTREGADORES, getMarket, HANDOFFS, productsOf } from "@/lib/feira";
+import { applyCoupon } from "@/lib/data";
 import { formatBRL } from "@/lib/format";
 import { usePediu } from "@/lib/store";
 import { toast } from "sonner";
@@ -30,7 +31,11 @@ function MarketGrid() {
   const setQty = usePediu((s) => s.setFeiraQty);
   const place = usePediu((s) => s.placeFeira);
   const payment = usePediu((s) => s.payment);
+  const setPayment = usePediu((s) => s.setPayment);
   const wallet = usePediu((s) => s.wallet);
+  const name = usePediu((s) => s.name);
+  const coupon = usePediu((s) => s.coupon);
+  const clients = usePediu((s) => s.fiadoClients ?? []);
 
   const mine = marketId === id ? qty : {};
   const lines = useMemo(
@@ -42,7 +47,12 @@ function MarketGrid() {
   );
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.count, 0);
   const rider = ENTREGADORES.find((item) => item.id === riderId) ?? ENTREGADORES[0];
-  const total = market ? subtotal + rider.fee : subtotal;
+  const priced = applyCoupon(coupon, subtotal, rider.fee, false, payment);
+  const total = market ? Math.max(0, subtotal - priced.discount) + priced.deliveryFee : subtotal;
+  const account = clients.find(
+    (client) => client.shopId === id && !client.blocked && client.name.trim().toLowerCase() === name.trim().toLowerCase(),
+  );
+  const room = account ? Math.max(0, account.limit - account.balance) : 0;
   const needle = query.trim().toLowerCase();
   const visible = needle
     ? products.filter((product) => product.name.toLowerCase().includes(needle))
@@ -180,9 +190,47 @@ function MarketGrid() {
               ))}
               <li className="flex justify-between text-muted">
                 <span>Entrega · {rider.name.split(" ")[0]}</span>
-                <span className="tabular-nums">{formatBRL(rider.fee)}</span>
+                <span className="tabular-nums">{formatBRL(priced.deliveryFee)}</span>
               </li>
+              {priced.discount > 0 ? (
+                <li className="flex justify-between text-primary">
+                  <span>{priced.label}</span>
+                  <span className="tabular-nums">− {formatBRL(priced.discount)}</span>
+                </li>
+              ) : null}
             </ul>
+
+            <p className="mt-4 font-display text-sm font-semibold">Pagar com</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(
+                [
+                  ["pix", "Pix"],
+                  ["wallet", "Pay"],
+                  ["fiado", "Fiado"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPayment(id)}
+                  className={cn(
+                    "h-10 rounded-full text-xs font-bold",
+                    payment === id ? "bg-ink text-ink-fg" : "bg-surface text-muted shadow-card",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              {payment === "fiado"
+                ? account
+                  ? `No nome ${account.name}. Cabe mais ${formatBRL(room)}.`
+                  : "O mercado precisa cadastrar o seu nome no fiado."
+                : payment === "wallet"
+                  ? `Pediu Pay com ${formatBRL(wallet)}.`
+                  : "O Pediu segura o Pix até a moto retirar."}
+            </p>
 
             <p className="mt-4 font-display text-sm font-semibold">Deixar em</p>
             <div className="mt-2 grid gap-2">
@@ -256,6 +304,14 @@ function MarketGrid() {
               onClick={() => {
                 if (payment === "wallet" && wallet < total) {
                   toast.error("Saldo insuficiente na Pediu Pay");
+                  return;
+                }
+                if (payment === "fiado" && !account) {
+                  toast.error("Peça o mercado cadastrar seu nome no fiado");
+                  return;
+                }
+                if (payment === "fiado" && account && account.balance + total > account.limit) {
+                  toast.error("Passou do limite de fiado");
                   return;
                 }
                 const order = place(note, rider.id);

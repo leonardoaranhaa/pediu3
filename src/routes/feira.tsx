@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { LaneBar } from "@/components/lane-bar";
 import { PhoneFrame } from "@/components/shell";
@@ -64,6 +64,10 @@ function FeiraBalcao() {
               </button>
             ))}
           </div>
+
+          <Link to="/feira/fiado" className="mt-3 inline-flex h-9 items-center rounded-full bg-surface px-3 text-xs font-bold shadow-card">
+            Clientes e fiado
+          </Link>
 
           <div className="mt-5 grid gap-5">
             {COLUMNS.map((column) => {

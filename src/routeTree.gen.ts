@@ -24,7 +24,9 @@ import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as TasteRouteImport } from './routes/taste'
+import { Route as VantagensRouteImport } from './routes/vantagens'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as FeiraFiadoRouteImport } from './routes/feira.fiado'
 import { Route as FeiraGradeRouteImport } from './routes/feira.grade'
 import { Route as LojaCardapioRouteImport } from './routes/loja.cardapio'
 import { Route as MarketIndexRouteImport } from './routes/market.index'
@@ -108,10 +110,20 @@ const TasteRoute = TasteRouteImport.update({
   path: '/taste',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VantagensRoute = VantagensRouteImport.update({
+  id: '/vantagens',
+  path: '/vantagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
+} as any)
+const FeiraFiadoRoute = FeiraFiadoRouteImport.update({
+  id: '/fiado',
+  path: '/fiado',
+  getParentRoute: () => FeiraRoute,
 } as any)
 const FeiraGradeRoute = FeiraGradeRouteImport.update({
   id: '/grade',
@@ -165,7 +177,9 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/vantagens': typeof VantagensRoute
   '/wallet': typeof WalletRoute
+  '/feira/fiado': typeof FeiraFiadoRoute
   '/feira/grade': typeof FeiraGradeRoute
   '/loja/cardapio': typeof LojaCardapioRoute
   '/market/$id': typeof MarketIdRoute
@@ -189,7 +203,9 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/vantagens': typeof VantagensRoute
   '/wallet': typeof WalletRoute
+  '/feira/fiado': typeof FeiraFiadoRoute
   '/feira/grade': typeof FeiraGradeRoute
   '/loja/cardapio': typeof LojaCardapioRoute
   '/market/$id': typeof MarketIdRoute
@@ -215,7 +231,9 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/taste': typeof TasteRoute
+  '/vantagens': typeof VantagensRoute
   '/wallet': typeof WalletRoute
+  '/feira/fiado': typeof FeiraFiadoRoute
   '/feira/grade': typeof FeiraGradeRoute
   '/loja/cardapio': typeof LojaCardapioRoute
   '/market/$id': typeof MarketIdRoute
@@ -242,7 +260,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/taste'
+    | '/vantagens'
     | '/wallet'
+    | '/feira/fiado'
     | '/feira/grade'
     | '/loja/cardapio'
     | '/market/$id'
@@ -266,7 +286,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/taste'
+    | '/vantagens'
     | '/wallet'
+    | '/feira/fiado'
     | '/feira/grade'
     | '/loja/cardapio'
     | '/market/$id'
@@ -291,7 +313,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/taste'
+    | '/vantagens'
     | '/wallet'
+    | '/feira/fiado'
     | '/feira/grade'
     | '/loja/cardapio'
     | '/market/$id'
@@ -317,6 +341,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   TasteRoute: typeof TasteRoute
+  VantagensRoute: typeof VantagensRoute
   WalletRoute: typeof WalletRoute
   OrderIdRoute: typeof OrderIdRoute
   RestaurantsIdRoute: typeof RestaurantsIdRoute
@@ -429,12 +454,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vantagens': {
+      id: '/vantagens'
+      path: '/vantagens'
+      fullPath: '/vantagens'
+      preLoaderRoute: typeof VantagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallet': {
       id: '/wallet'
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/feira/fiado': {
+      id: '/feira/fiado'
+      path: '/fiado'
+      fullPath: '/feira/fiado'
+      preLoaderRoute: typeof FeiraFiadoRouteImport
+      parentRoute: typeof FeiraRoute
     }
     '/feira/grade': {
       id: '/feira/grade'
@@ -489,10 +528,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface FeiraRouteChildren {
+  FeiraFiadoRoute: typeof FeiraFiadoRoute
   FeiraGradeRoute: typeof FeiraGradeRoute
 }
 
 const FeiraRouteChildren: FeiraRouteChildren = {
+  FeiraFiadoRoute: FeiraFiadoRoute,
   FeiraGradeRoute: FeiraGradeRoute,
 }
 
@@ -547,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   TasteRoute: TasteRoute,
+  VantagensRoute: VantagensRoute,
   WalletRoute: WalletRoute,
   OrderIdRoute: OrderIdRoute,
   RestaurantsIdRoute: RestaurantsIdRoute,

@@ -13,6 +13,7 @@ import {
   type Extra,
 } from "@/lib/data";
 import { getFeiraProduct, getMarket, getRider, getStop } from "@/lib/feira";
+import { formatBRL } from "@/lib/format";
 import { deliveryClock, STATUS_LABEL, useNow, type DeliveryStatus } from "@/lib/clock";
 import {
   offerFromTicket,
@@ -35,7 +36,7 @@ export type CartItem = {
   notes: string;
 };
 
-export type PaymentMethod = "pix" | "card" | "cash" | "wallet";
+export type PaymentMethod = "pix" | "card" | "cash" | "wallet" | "fiado";
 
 export type OrderStatus = DeliveryStatus;
 
@@ -55,6 +56,26 @@ export type Notif = {
   to?: "/" | "/search" | "/market" | "/taste" | "/club" | "/orders" | "/wallet" | "/help";
   q?: string;
 };
+
+export type FiadoClient = {
+  id: string;
+  shopId: string;
+  name: string;
+  phone: string;
+  limit: number;
+  balance: number;
+  blocked: boolean;
+};
+
+const SEED_FIADO: FiadoClient[] = [
+  { id: "fc-voce", shopId: "central", name: "Você", phone: "", limit: 120, balance: 18.4, blocked: false },
+  { id: "fc-helena", shopId: "central", name: "Helena", phone: "14999990000", limit: 80, balance: 0, blocked: false },
+];
+
+function matchFiado(clients: FiadoClient[], shopId: string, name: string) {
+  const key = name.trim().toLowerCase();
+  return clients.find((client) => client.shopId === shopId && !client.blocked && client.name.trim().toLowerCase() === key);
+}
 
 export type WalletTx = {
   id: string;
@@ -131,6 +152,7 @@ type PediuState = {
   feiraOut: string[];
   feiraStopId: string;
   feiraShopId: string;
+  fiadoClients: FiadoClient[];
   setName: (name: string) => void;
   setAddress: (id: string) => void;
   setPayment: (p: PaymentMethod) => void;
@@ -169,6 +191,9 @@ type PediuState = {
   toggleFeiraOut: (productId: string) => void;
   setFeiraStop: (id: string) => void;
   setFeiraShop: (id: string) => void;
+  addFiadoClient: (shopId: string, name: string, phone: string, limit: number) => boolean;
+  setFiadoLimit: (id: string, limit: number) => void;
+  toggleFiadoBlock: (id: string) => void;
   placeFeira: (note: string, riderId: string) => Order | null;
 };
 
@@ -300,6 +325,7 @@ export const usePediu = create<PediuState>()(
       feiraOut: [],
       feiraStopId: "casa",
       feiraShopId: "central",
+      fiadoClients: SEED_FIADO,
       setName: (name) => set({ name: name.trim() || "Você" }),
       setAddress: (id) => set({ addressId: id }),
       setPayment: (p) => set({ payment: p }),
@@ -355,6 +381,7 @@ export const usePediu = create<PediuState>()(
         if (!restaurant) return null;
         const grand = totals.total + tip;
         if (payment === "wallet" && wallet < grand) return null;
+        if (payment === "fiado") return null;
         const courier = COURIERS[Math.floor(Math.random() * COURIERS.length)]!;
         const earned = Math.max(1, Math.floor(totals.total));
         const cashback = roundMoney(grand * 0.02);
@@ -590,6 +617,43 @@ export const usePediu = create<PediuState>()(
       },
       setFeiraStop: (id) => set({ feiraStopId: id }),
       setFeiraShop: (id) => set({ feiraShopId: id }),
+      addFiadoClient: (shopId, name, phone, limit) => {
+        const clean = name.trim();
+        if (clean.length < 2 || !Number.isFinite(limit) || limit < 0) return false;
+        const clients = get().fiadoClients ?? [];
+        if (clients.some((client) => client.shopId === shopId && client.name.trim().toLowerCase() === clean.toLowerCase())) {
+          return false;
+        }
+        set({
+          fiadoClients: [
+            {
+              id: `fc-${Date.now().toString(36)}`,
+              shopId,
+              name: clean,
+              phone: phone.trim(),
+              limit: roundMoney(limit),
+              balance: 0,
+              blocked: false,
+            },
+            ...clients,
+          ],
+        });
+        return true;
+      },
+      setFiadoLimit: (id, limit) => {
+        if (!Number.isFinite(limit) || limit < 0) return;
+        set({
+          fiadoClients: (get().fiadoClients ?? []).map((client) =>
+            client.id === id ? { ...client, limit: roundMoney(limit) } : client,
+          ),
+        });
+      },
+      toggleFiadoBlock: (id) =>
+        set({
+          fiadoClients: (get().fiadoClients ?? []).map((client) =>
+            client.id === id ? { ...client, blocked: !client.blocked } : client,
+          ),
+        }),
       placeFeira: (note, riderId) => {
         const marketId = get().feiraMarketId;
         const market = getMarket(marketId);
@@ -601,11 +665,15 @@ export const usePediu = create<PediuState>()(
           .map(([id, count]) => ({ product: getFeiraProduct(id), count }))
           .filter((line) => line.product && line.count > 0 && !out.includes(line.product.id));
         if (!lines.length) return null;
-        const { payment, orders, points, notifications, wallet, walletTx, name, feiraStopId } = get();
+        const { payment, orders, points, notifications, wallet, walletTx, name, feiraStopId, coupon } = get();
         const stop = getStop(feiraStopId);
         const subtotal = roundMoney(lines.reduce((sum, line) => sum + line.product!.price * line.count, 0));
-        const total = roundMoney(subtotal + rider.fee);
+        const priced = applyCoupon(coupon, subtotal, rider.fee, false, payment);
+        const total = roundMoney(Math.max(0, subtotal - priced.discount) + priced.deliveryFee);
+        const fiado = (get().fiadoClients ?? []);
+        const account = payment === "fiado" ? matchFiado(fiado, market.id, name) : undefined;
         if (payment === "wallet" && wallet < total) return null;
+        if (payment === "fiado" && (!account || account.balance + total > account.limit)) return null;
         const items: CartItem[] = lines.map((line) => ({
           key: line.product!.id,
           dishId: line.product!.id,
@@ -625,15 +693,16 @@ export const usePediu = create<PediuState>()(
           items,
           subtotal,
           deliveryFee: rider.fee,
-          discount: 0,
+          discount: priced.discount,
           tip: 0,
           total,
-          cashback: roundMoney(total * 0.02),
+          cashback: payment === "fiado" ? 0 : roundMoney(total * 0.02),
           status: "received",
           createdAt: Date.now(),
           etaMins: 50,
           payment,
           addressId: stop.id,
+          coupon: priced.label ? coupon ?? undefined : undefined,
           courier: {
             name: rider.name,
             vehicle: rider.vehicle,
@@ -701,11 +770,20 @@ export const usePediu = create<PediuState>()(
           chats: { ...get().chats, [order.id]: [hello] },
           tickets: [ticket, ...get().tickets],
           runs: [run, ...(get().runs ?? [])],
+          fiadoClients:
+            payment === "fiado" && account
+              ? fiado.map((client) =>
+                  client.id === account.id ? { ...client, balance: roundMoney(client.balance + total) } : client,
+                )
+              : fiado,
           notifications: [
             {
               id: `n-${order.id}`,
-              title: `Combinado com ${rider.name.split(" ")[0]}`,
-              body: `${market.name} separa a lista. O Pediu segura o valor até a moto retirar.`,
+              title: payment === "fiado" ? "Entrou no fiado" : `Combinado com ${rider.name.split(" ")[0]}`,
+              body:
+                payment === "fiado"
+                  ? `${market.name} anotou ${formatBRL(total)} no nome ${name.trim() || "Cliente"}.`
+                  : `${market.name} separa a lista. O Pediu segura o valor até a moto retirar.`,
               at: Date.now(),
               read: false,
               to: "/orders" as const,
@@ -742,6 +820,7 @@ export const usePediu = create<PediuState>()(
           feiraOut: p.feiraOut ?? [],
           feiraStopId: p.feiraStopId ?? "casa",
           feiraShopId: p.feiraShopId ?? "central",
+          fiadoClients: p.fiadoClients?.length ? p.fiadoClients : current.fiadoClients,
         };
       },
     },
